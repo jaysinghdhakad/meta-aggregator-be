@@ -18,7 +18,7 @@ export const getBarterQuote = async (slippage: number, amount: number, tokenIn: 
         })
 
 
-
+        // return null if the status is not normal
         if (routeData.data.status != "Normal") return null
 
 
@@ -39,7 +39,6 @@ export const getBarterQuote = async (slippage: number, amount: number, tokenIn: 
             }
         }
         )
-        console.log("responseBarter:", swapResponse.data)
 
         return swapResponse.data
 

@@ -3,11 +3,10 @@ import qs from "qs";
 import 'dotenv/config'
 
 export const getEnsoQuote = async (slippage: number, amount: number, tokenIn: string, tokenOut: string, sender: string) => {
-    console.log({slippage, amount, tokenIn, tokenOut, sender})
     const params = qs.stringify({
         chainId: process.env.CHAIN_ID,
         fromAddress: sender,
-        spender:sender,
+        spender: sender,
         amountIn: [amount.toString()],
         tokenIn: [tokenIn],
         tokenOut: [tokenOut],
@@ -15,7 +14,6 @@ export const getEnsoQuote = async (slippage: number, amount: number, tokenIn: st
         receiver: sender
     })
 
-    console.log("enso params:", params)
     try {
         const response = await axios.get(`https://api.enso.finance/api/v1/shortcuts/route?${params}`, {
             headers: {
@@ -24,7 +22,6 @@ export const getEnsoQuote = async (slippage: number, amount: number, tokenIn: st
                 Authorization: process.env.ENSO_API_KEY
             }
         })
-        console.log("responseEnso:", response.data)
 
         return response.data
     } catch (error) {

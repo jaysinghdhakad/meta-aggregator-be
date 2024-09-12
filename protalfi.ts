@@ -10,7 +10,7 @@ export const getPortalfiQuote = async (slippage: number, amount: number, tokenIn
         outputToken: `${process.env.CHAIN_NAME}:${tokenOut}`,
         inputAmount: amount,
         slippageTolerancePercentage: slippage,
-        validate:false
+        validate: false
     })
 
     try {
@@ -18,7 +18,6 @@ export const getPortalfiQuote = async (slippage: number, amount: number, tokenIn
             headers: { Authorization: `${process.env.PORTALFI_API_KEY}` }
         })
 
-        console.log("responsePortalfi:", response.data)
 
         return response.data
     } catch (error) {

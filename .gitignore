@@ -13,5 +13,7 @@ node_modules
 # build output folder
 dist
 
+test.ts
+
 # log files
 *.log

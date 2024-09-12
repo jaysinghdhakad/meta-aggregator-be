@@ -21,19 +21,24 @@ app.get('/', (req, res) => {
 });
 
 app.post('/best-quote', async (req, res) => {
-  console.log(req.body)
   const { slippage, amount, tokenIn, tokenOut, sender } = req.body;
+  // sort the quotes by amount out and return the quote with the max amount out
   const swapData = await sortOrder(slippage, amount, tokenIn, tokenOut, sender)
   res.send(swapData);
 });
 
 export const sortOrder = async (slippage: number, amount: number, tokenIn: string, tokenOut: string, sender: string) => {
-  const [portalfi, enso, barter] = await Promise.all([getPortalfiQuote(slippage, amount, tokenIn, tokenOut, sender), getEnsoQuote(slippage, amount, tokenIn, tokenOut, sender), getBarterQuote(slippage, amount, tokenIn, tokenOut, sender)])
+  // get quotes from all protocols
+  const [portalfi, enso, barter] = await Promise.all([
+    getPortalfiQuote(slippage, amount, tokenIn, tokenOut, sender),
+    getEnsoQuote(slippage, amount, tokenIn, tokenOut, sender), 
+    getBarterQuote(slippage, amount, tokenIn, tokenOut, sender)
+  ])
 
   const portalfiAmount = portalfi ? portalfi.context.outputAmount : 0
   const ensoAmount = enso ? enso.amountOut : 0
   const barterAmount = barter ? barter.route.outputAmount : 0
-
+  // find the max amount out of all quotes
   const maxAmount = findMax(portalfiAmount, ensoAmount, barterAmount)
 
 
@@ -42,8 +47,7 @@ export const sortOrder = async (slippage: number, amount: number, tokenIn: strin
   console.log("ensoAmount", ensoAmount)
   console.log("barterAmount", barterAmount)
 
-
-
+  // return the quote with the max amount out
   if (maxAmount === portalfiAmount) {
     return {
       protocol: "portalfi",
@@ -56,7 +60,7 @@ export const sortOrder = async (slippage: number, amount: number, tokenIn: strin
     }
   } else if (maxAmount === ensoAmount) {
     const minAmountOut = ensoAmount - (ensoAmount * (slippage / 100))
-      return {
+    return {
       protocol: "enso",
       to: enso.tx.to,
       data: enso.tx.data,
