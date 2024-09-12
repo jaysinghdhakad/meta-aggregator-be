@@ -47,6 +47,7 @@ export const sortOrder = async (slippage: number, amount: number, tokenIn: strin
   console.log("ensoAmount", ensoAmount)
   console.log("barterAmount", barterAmount)
 
+
   // return the quote with the max amount out
   if (maxAmount === portalfiAmount) {
     return {
@@ -56,7 +57,7 @@ export const sortOrder = async (slippage: number, amount: number, tokenIn: strin
       value: portalfi.tx.value,
       amountOut: portalfiAmount,
       approvalAddress: portalfi.tx.to,
-      minAmountOut: portalfiAmount
+      minAmountOut: portalfi.context.minOutputAmount
     }
   } else if (maxAmount === ensoAmount) {
     const minAmountOut = ensoAmount - (ensoAmount * (slippage / 100))
