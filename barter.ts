@@ -28,7 +28,7 @@ export const getBarterQuote = async (slippage: number, amount: number, tokenIn: 
             'amount': amount.toString(),
             'target': tokenOut,
             'source': tokenIn,
-            'targetTokenMinReturn': `${Math.ceil((routeData.data.outputWithGasAmount / 100) * 99)}`,
+            'targetTokenMinReturn': `${Math.ceil((routeData.data.outputWithGasAmount / 100) * (100 - slippage))}`,
             'deadline': `${Math.floor(Date.now() / 1000 + 300)}`
         }
 

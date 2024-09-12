@@ -11,8 +11,11 @@ export const getEnsoQuote = async (slippage: number, amount: number, tokenIn: st
         amountIn: [amount.toString()],
         tokenIn: [tokenIn],
         tokenOut: [tokenOut],
-        slippage: (slippage * 100).toString()
+        slippage: (slippage * 100).toString(),
+        receiver: sender
     })
+
+    console.log("enso params:", params)
     try {
         const response = await axios.get(`https://api.enso.finance/api/v1/shortcuts/route?${params}`, {
             headers: {

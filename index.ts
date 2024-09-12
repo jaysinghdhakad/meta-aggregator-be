@@ -35,41 +35,46 @@ export const sortOrder = async (slippage: number, amount: number, tokenIn: strin
   const barterAmount = barter ? barter.route.outputAmount : 0
 
   const maxAmount = findMax(portalfiAmount, ensoAmount, barterAmount)
-  // return {
-  //   to: portalfi.tx.to,
-  //   data: portalfi.tx.data,
-  //   value: portalfi.tx.value,
-  //   amountOut: portalfiAmount
-  // }
+
 
   console.log("maxAmount", maxAmount)
   console.log("portalfiAmount", portalfiAmount)
   console.log("ensoAmount", ensoAmount)
   console.log("barterAmount", barterAmount)
 
+
+
   if (maxAmount === portalfiAmount) {
     return {
+      protocol: "portalfi",
       to: portalfi.tx.to,
       data: portalfi.tx.data,
       value: portalfi.tx.value,
       amountOut: portalfiAmount,
-      approvalAddress: portalfi.tx.to
+      approvalAddress: portalfi.tx.to,
+      minAmountOut: portalfiAmount
     }
   } else if (maxAmount === ensoAmount) {
-    return {
+    const minAmountOut = ensoAmount - (ensoAmount * (slippage / 100))
+      return {
+      protocol: "enso",
       to: enso.tx.to,
       data: enso.tx.data,
       value: enso.tx.value,
       amountOut: ensoAmount,
-      approvalAddress: "0x27Dd78498B909cD0B93f0E312d1A1bB12c89921d"
+      approvalAddress: "0x27Dd78498B909cD0B93f0E312d1A1bB12c89921d",
+      minAmountOut: minAmountOut
     }
   } else {
+    const minAmountOut = barterAmount - (barterAmount * (slippage / 100))
     return {
+      protocol: "barter",
       to: barter.to,
       data: barter.data,
       value: barter.value,
       amountOut: barterAmount,
-      approvalAddress: barter.to
+      approvalAddress: barter.to,
+      minAmountOut: minAmountOut
     }
   }
 
