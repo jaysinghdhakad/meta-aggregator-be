@@ -60,7 +60,7 @@ export const sortOrder = async (slippage: number, amount: number, tokenIn: strin
       minAmountOut: portalfi.context.minOutputAmount
     }
   } else if (maxAmount === ensoAmount) {
-    const minAmountOut = ensoAmount - (ensoAmount * (slippage / 100))
+    const minAmountOut = Math.floor(ensoAmount - (ensoAmount * (slippage / 100)))
     return {
       protocol: "enso",
       to: enso.tx.to,
@@ -71,7 +71,7 @@ export const sortOrder = async (slippage: number, amount: number, tokenIn: strin
       minAmountOut: minAmountOut
     }
   } else {
-    const minAmountOut = barterAmount - (barterAmount * (slippage / 100))
+    const minAmountOut = Math.floor(barterAmount - (barterAmount * (slippage / 100)))
     return {
       protocol: "barter",
       to: barter.to,
