@@ -1,17 +1,13 @@
 import express from "express";
-import { getPortalfiQuote } from "./protalfi";
-import { getEnsoQuote } from "./enso";
-import { getBarterQuote } from "./barter";
-import BigNumber from "bignumber.js";
+import { sortOrder } from "./sortOrder";
+import { getAmountOut } from "./sortAmount";
+import { getSwapData } from "./fetchSwapData";
 import cors from "cors";
-
-
-
 
 const app = express();
 app.use(cors());
 
-const port = 4000;
+const port = process.env.PORT || 3000;
 
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
@@ -20,77 +16,33 @@ app.get('/', (req, res) => {
   res.send('Welcome to my server!');
 });
 
+// this is for the best quote with swap data. This endpoint queries all protocols and returns the best quote with swap data. 
 app.post('/best-quote', async (req, res) => {
-  const { slippage, amount, tokenIn, tokenOut, sender } = req.body;
+  const { slippage, amount, tokenIn, tokenOut, sender, receiver, chainId } = req.body;
   // sort the quotes by amount out and return the quote with the max amount out
-  const swapData = await sortOrder(slippage, amount, tokenIn, tokenOut, sender)
+  const swapData = await sortOrder(chainId, slippage, amount, tokenIn, tokenOut, sender, receiver)
+  if(swapData == null) return res.status(400).send({error: "No quotes found"});
   res.send(swapData);
 });
 
-export const sortOrder = async (slippage: number, amount: number, tokenIn: string, tokenOut: string, sender: string) => {
-  // get quotes from all protocols
-  const [portalfi, enso, barter] = await Promise.all([
-    getPortalfiQuote(slippage, amount, tokenIn, tokenOut, sender),
-    getEnsoQuote(slippage, amount, tokenIn, tokenOut, sender), 
-    getBarterQuote(slippage, amount, tokenIn, tokenOut, sender)
-  ])
+//This is for the best amount out. This endpoint queries all protocols and returns the best amount out. Also give the approval address for the best quote.
+app.post('/best-amount-out', async (req, res) => {
+  const { amount, tokenIn, tokenOut, sender, receiver, chainId } = req.body;
+  const response = await getAmountOut(chainId, amount, tokenIn, tokenOut, sender, receiver);
+  if(response == null) return res.status(400).send({error: "No quotes found"});
+  res.send(response);
+});
 
-  const portalfiAmount = portalfi ? portalfi.context.outputAmount : 0
-  const ensoAmount = enso ? enso.amountOut : 0
-  const barterAmount = barter ? barter.route.outputAmount : 0
-  // find the max amount out of all quotes
-  const maxAmount = findMax(portalfiAmount, ensoAmount, barterAmount)
+// This end point is for the swap data. This endpoint queries the protocol sent in by the user and returns the swap data.
+app.post('/swap-data', async (req, res) => {
+  const { slippage, amount, tokenIn, tokenOut, sender, amountOut, protocol, receiver, chainId } = req.body;
 
-
-  console.log("maxAmount", maxAmount)
-  console.log("portalfiAmount", portalfiAmount)
-  console.log("ensoAmount", ensoAmount)
-  console.log("barterAmount", barterAmount)
-
-
-  // return the quote with the max amount out
-  if (maxAmount === portalfiAmount) {
-    return {
-      protocol: "portalfi",
-      to: portalfi.tx.to,
-      data: portalfi.tx.data,
-      value: portalfi.tx.value,
-      amountOut: portalfiAmount,
-      approvalAddress: portalfi.tx.to,
-      minAmountOut: portalfi.context.minOutputAmount
-    }
-  } else if (maxAmount === ensoAmount) {
-    const minAmountOut = Math.floor(ensoAmount - (ensoAmount * (slippage / 100)))
-    return {
-      protocol: "enso",
-      to: enso.tx.to,
-      data: enso.tx.data,
-      value: enso.tx.value,
-      amountOut: ensoAmount,
-      approvalAddress: "0x27Dd78498B909cD0B93f0E312d1A1bB12c89921d",
-      minAmountOut: minAmountOut
-    }
-  } else {
-    const minAmountOut = Math.floor(barterAmount - (barterAmount * (slippage / 100)))
-    return {
-      protocol: "barter",
-      to: barter.to,
-      data: barter.data,
-      value: barter.value,
-      amountOut: barterAmount,
-      approvalAddress: barter.to,
-      minAmountOut: minAmountOut
-    }
-  }
-
-}
-
-function findMax(a: any, b: any, c: any) {
-  const maxAB = BigNumber.max(a, b);
-  const maxABC = BigNumber.max(maxAB, c);
-  return maxABC.toFixed(0);
-}
+ const swapData = await getSwapData(chainId, protocol, slippage, amount, tokenIn, tokenOut, sender, receiver, amountOut);
+ if(swapData == null) return res.status(400).send({error: "No swap data found"});
+ res.send(swapData);
+})
 
 app.listen(port, () => {
   console.log(`Server is running on port ${port}`);
 });
+
