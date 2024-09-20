@@ -93,15 +93,46 @@
                             }
                         }
                     },
+                    
                     "400": {
-                        "description": "No quotes found",
+                        "description": "Bad Request. This error occurs when the request is malformed or missing required parameters. It may indicate invalid input data, missing required fields, or an attempt to use an unsupported chain ID.",
                         "content": {
                             "application/json": {
                                 "schema": {
                                     "type": "object",
                                     "properties": {
                                         "error": {
-                                            "type": "string"
+                                            "type": "string",
+                                            "enum": [
+                                                "Missing required field: slippage",
+                                                "Missing required field: amount",
+                                                "Missing required field: tokenIn",
+                                                "Missing required field: tokenOut",
+                                                "Missing required field: sender",
+                                                "Missing required field: receiver",
+                                                "Missing required field: chainId",
+                                                "Invalid chain ID",
+                                                "No quotes found"
+                                            ]
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found. This error occurs when the requested resource cannot be found. It may indicate an invalid route, unavailable quote, or non-existent swap data.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "error": {
+                                            "type": "string",
+                                            "enum": [
+                                                "Route not found",
+                                                "No quotes available for the given pair"
+                                            ]
                                         }
                                     }
                                 }
@@ -154,7 +185,7 @@
                 },
                 "responses": {
                     "200": {
-                        "description": "Successful response with best amount out",
+                        "description": "Successful response. The operation completed as expected.",
                         "content": {
                             "application/json": {
                                 "schema": {
@@ -175,14 +206,43 @@
                         }
                     },
                     "400": {
-                        "description": "No quotes found",
+                        "description": "Bad Request. This error occurs when the request is malformed or missing required parameters. It may indicate invalid input data, missing required fields, or an attempt to use an unsupported chain ID.",
                         "content": {
                             "application/json": {
                                 "schema": {
                                     "type": "object",
                                     "properties": {
                                         "error": {
-                                            "type": "string"
+                                            "type": "string",
+                                            "enum": [
+                                                "Missing required field: amount",
+                                                "Missing required field: tokenIn",
+                                                "Missing required field: tokenOut",
+                                                "Missing required field: sender",
+                                                "Missing required field: receiver",
+                                                "Missing required field: chainId",
+                                                "Invalid chain ID",
+                                                "No quotes found"
+                                            ]
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found. This error occurs when the requested resource cannot be found. It may indicate an invalid route, unavailable quote, or non-existent swap data.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "error": {
+                                            "type": "string",
+                                            "enum": [
+                                                "Route not found",
+                                                "No quotes available for the given pair"
+                                            ]
                                         }
                                     }
                                 }
@@ -281,16 +341,47 @@
                                 }
                             }
                         }
-                    },
+                    },           
                     "400": {
-                        "description": "No swap data found",
+                        "description": "Bad Request. This error occurs when the request is malformed or missing required parameters. It may indicate invalid input data, missing required fields, or an attempt to use an unsupported chain ID.",
                         "content": {
                             "application/json": {
                                 "schema": {
                                     "type": "object",
                                     "properties": {
                                         "error": {
-                                            "type": "string"
+                                            "type": "string",
+                                            "enum": [
+                                                "Missing required field: amount",
+                                                "Missing required field: tokenIn",
+                                                "Missing required field: tokenOut",
+                                                "Missing required field: sender",
+                                                "Missing required field: receiver",
+                                                "Missing required field: chainId",
+                                                "Missing required field: amountOut",
+                                                "Missing required field: protocol",
+                                                "Invalid chain ID",
+                                                "No quotes found"
+                                            ]
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found. This error occurs when the requested resource cannot be found. It may indicate an invalid route, unavailable quote, or non-existent swap data.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "error": {
+                                            "type": "string",
+                                            "enum": [
+                                                "Route not found",
+                                                "No quotes available for the given pair"
+                                            ]
                                         }
                                     }
                                 }
