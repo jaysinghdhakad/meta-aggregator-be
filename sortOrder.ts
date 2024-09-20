@@ -1,7 +1,7 @@
 import { getPortalfiSwap } from "./protalfi";
 import { getEnsoSwap } from "./enso";
 import { getBarterAmountAndSwap } from "./barter";
-import { findMax, getApprovalAddressForChain } from "./utils";
+import { findMax, getApprovalAddressForChain, getMinAmountOut } from "./utils";
 import { ENSO_PROTOCOL } from "./protocol";
 
 // This function queries all protocols and returns the best quote with swap data.
@@ -42,7 +42,7 @@ export const sortOrder = async (chainID: number, slippage: number, amount: numbe
       minAmountOut: portalfi.context.minOutputAmount
     }
   } else if (maxAmount === ensoAmount) {
-    const minAmountOut = Math.floor(ensoAmount - (ensoAmount * (slippage / 100)))
+    const minAmountOut = getMinAmountOut(ensoAmount, slippage)
     const approvalAddress = getApprovalAddressForChain(ENSO_PROTOCOL, chainID)
     return {
       protocol: "enso",
@@ -55,7 +55,7 @@ export const sortOrder = async (chainID: number, slippage: number, amount: numbe
       gasEstimate: enso.gas
     }
   } else {
-    const minAmountOut = Math.floor(barterAmount - (barterAmount * (slippage / 100)))
+    const minAmountOut = getMinAmountOut(barterAmount, slippage)
     return {
       protocol: "barter",
       to: barter.to,

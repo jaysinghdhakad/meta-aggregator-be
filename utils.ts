@@ -32,3 +32,7 @@ export function getChainName(chainId: number) {
         return "base"
     }
 }
+
+export function getMinAmountOut(amountOut: string, slippage: number) {
+    return BigNumber(amountOut).minus(BigNumber(amountOut).times(slippage / 100)).toFixed(0)
+}

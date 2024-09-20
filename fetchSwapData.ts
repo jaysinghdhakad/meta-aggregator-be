@@ -1,7 +1,7 @@
 import { getPortalfiSwap } from "./protalfi";
 import { getEnsoSwap } from "./enso";
 import { getBarterSwap } from "./barter";
-import { getApprovalAddressForChain } from "./utils";
+import { getApprovalAddressForChain,getMinAmountOut } from "./utils";
 
 // This function queries the protocol sent in by the user and returns the swap data.
 export async function getSwapData(chainId: number, protocol: string, slippage: number, amount: number, tokenIn: string, tokenOut: string, sender: string, receiver: string,amountOut: number) {
@@ -26,8 +26,7 @@ export async function getSwapData(chainId: number, protocol: string, slippage: n
       if(response == null) return null
 
       const ensoAmount = response.amountOut;
-  
-      const minAmountOut = Math.floor(ensoAmount - (ensoAmount * (slippage / 100)));
+      const minAmountOut = getMinAmountOut(ensoAmount, slippage);
       // get the approval address for the protocol for chainId
       const approvalAddress = getApprovalAddressForChain(protocol, chainId);
       // return the swap data
@@ -47,8 +46,7 @@ export async function getSwapData(chainId: number, protocol: string, slippage: n
       if(response == null) return null
 
       const barterAmount = response.route.outputAmount;
-  
-      const minAmountOut = Math.floor(barterAmount - (barterAmount * (slippage / 100)));
+      const minAmountOut = getMinAmountOut(barterAmount, slippage);
       // return the swap data
       return {
         protocol: "barter",
