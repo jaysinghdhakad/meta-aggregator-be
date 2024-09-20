@@ -24,7 +24,6 @@ export const getEnsoSwap = async (chainID: number,slippage: number, amount: numb
             }
         })
 
-        console.log("enso response", response.data)
 
         return response.data
     } catch (error) {
