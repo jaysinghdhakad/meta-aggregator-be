@@ -93,7 +93,6 @@
                             }
                         }
                     },
-                    
                     "400": {
                         "description": "Bad Request. This error occurs when the request is malformed or missing required parameters. It may indicate invalid input data, missing required fields, or an attempt to use an unsupported chain ID.",
                         "content": {
@@ -132,7 +131,7 @@
                                 "schema": {
                                     "type": "object",
                                     "properties": {
-                                        "error": {
+                                        "message": {
                                             "type": "string",
                                             "enum": [
                                                 "Route not found"
@@ -230,7 +229,8 @@
                                                 "Invalid tokenOut address",
                                                 "Invalid amount: must be a positive number",
                                                 "Invalid receiver address",
-                                                "Invalid sender address"                                            ]
+                                                "Invalid sender address"
+                                            ]
                                         }
                                     }
                                 }
@@ -244,11 +244,10 @@
                                 "schema": {
                                     "type": "object",
                                     "properties": {
-                                        "error": {
+                                        "message": {
                                             "type": "string",
                                             "enum": [
-                                                "Route not found",
-                                                "No quotes available for the given pair"
+                                                "Route not found"
                                             ]
                                         }
                                     }
@@ -348,7 +347,7 @@
                                 }
                             }
                         }
-                    },           
+                    },
                     "400": {
                         "description": "Bad Request. This error occurs when the request is malformed or missing required parameters. It may indicate invalid input data, missing required fields, or an attempt to use an unsupported chain ID.",
                         "content": {
@@ -390,7 +389,7 @@
                                 "schema": {
                                     "type": "object",
                                     "properties": {
-                                        "error": {
+                                        "message": {
                                             "type": "string",
                                             "enum": [
                                                 "Route not found",

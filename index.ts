@@ -112,7 +112,7 @@ app.post('/best-quote', validateRequest(['slippage', 'amount', 'tokenIn', 'token
   const { slippage, amount, tokenIn, tokenOut, sender, receiver, chainId } = req.body;
   // sort the quotes by amount out and return the quote with the max amount out
   const swapData = await sortOrder(chainId, slippage, amount, tokenIn, tokenOut, sender, receiver)
-  if (swapData == null) return res.status(404).send({ error: "No quotes found" });
+  if (swapData == null) return res.status(404).send({ message: "No quotes found" });
   res.send(swapData);
 });
 
@@ -121,7 +121,7 @@ app.post('/best-amount-out', validateRequest(['amount', 'tokenIn', 'tokenOut', '
   const { amount, tokenIn, tokenOut, sender, receiver, chainId } = req.body;
   // sort the quotes by amount out and return the quote with the max amount out
   const response = await getAmountOut(chainId, amount, tokenIn, tokenOut, sender, receiver);
-  if (response == null) return res.status(404).send({ error: "No quotes found" });
+  if (response == null) return res.status(404).send({ message: "No quotes found" });
   res.send(response);
 });
 
@@ -130,7 +130,7 @@ app.post('/swap-data', validateRequest(['slippage', 'amount', 'tokenIn', 'tokenO
   const { slippage, amount, tokenIn, tokenOut, sender, amountOut, protocol, receiver, chainId } = req.body;
   // get the swap data from the protocol sent in by the user
   const swapData = await getSwapData(chainId, protocol, slippage, amount, tokenIn, tokenOut, sender, receiver, amountOut);
-  if (swapData == null) return res.status(404).send({ error: "No swap data found" });
+  if (swapData == null) return res.status(404).send({ message: "No swap data found" });
   res.send(swapData);
 })
 
