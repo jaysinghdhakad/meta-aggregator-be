@@ -7,7 +7,7 @@
     },
     "servers": [
         {
-            "url": "http://localhost:3000"
+            "url": "http://bsccentral.velvetdao.xyz:3000"
         }
     ],
     "paths": {
@@ -112,7 +112,12 @@
                                                 "Missing required field: receiver",
                                                 "Missing required field: chainId",
                                                 "Invalid chain ID",
-                                                "No quotes found"
+                                                "Invalid tokenIn address",
+                                                "Invalid tokenOut address",
+                                                "Invalid amount: must be a positive number",
+                                                "Invalid receiver address",
+                                                "Invalid sender address",
+                                                "Invalid slippage: must be a non-negative number"
                                             ]
                                         }
                                     }
@@ -130,8 +135,7 @@
                                         "error": {
                                             "type": "string",
                                             "enum": [
-                                                "Route not found",
-                                                "No quotes available for the given pair"
+                                                "Route not found"
                                             ]
                                         }
                                     }
@@ -222,8 +226,11 @@
                                                 "Missing required field: receiver",
                                                 "Missing required field: chainId",
                                                 "Invalid chain ID",
-                                                "No quotes found"
-                                            ]
+                                                "Invalid tokenIn address",
+                                                "Invalid tokenOut address",
+                                                "Invalid amount: must be a positive number",
+                                                "Invalid receiver address",
+                                                "Invalid sender address"                                            ]
                                         }
                                     }
                                 }
@@ -361,7 +368,14 @@
                                                 "Missing required field: amountOut",
                                                 "Missing required field: protocol",
                                                 "Invalid chain ID",
-                                                "No quotes found"
+                                                "Invalid tokenIn address",
+                                                "Invalid tokenOut address",
+                                                "Invalid amount: must be a positive number",
+                                                "Invalid receiver address",
+                                                "Invalid sender address",
+                                                "Invalid slippage: must be a non-negative number",
+                                                "Invalid amountOut: must be a positive number",
+                                                "Invalid protocol: must be one of enso, portalfi, barter"
                                             ]
                                         }
                                     }
