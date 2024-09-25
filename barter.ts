@@ -4,6 +4,9 @@ import 'dotenv/config'
 // This function queries the barter protocol and returns the swap data.
 export const getBarterSwap = async (slippage: number, amount: number, tokenIn: string, tokenOut: string, minOutputAmount: number, receipt: string) => {
     try {
+        if (tokenOut == process.env.ETH_ADDRESS_ENSO) { tokenOut = process.env.ETH_ADDRESS || "0x0000000000000000000000000000000000000000" }
+        if (tokenIn == process.env.ETH_ADDRESS_ENSO) { tokenIn = process.env.ETH_ADDRESS || "0x0000000000000000000000000000000000000000" }
+
         const swapRequestPayload =
         {
             'recipient': receipt,
@@ -33,6 +36,9 @@ export const getBarterSwap = async (slippage: number, amount: number, tokenIn: s
 // This function queries the barter protocol and returns the quote.
 export const getBarterQuote = async (amount: number, tokenIn: string, tokenOut: string) => {
     try {
+        if (tokenOut == process.env.ETH_ADDRESS_ENSO) { tokenOut = process.env.ETH_ADDRESS || "0x0000000000000000000000000000000000000000" }
+        if (tokenIn == process.env.ETH_ADDRESS_ENSO) { tokenIn = process.env.ETH_ADDRESS || "0x0000000000000000000000000000000000000000" }
+
         const routeRequestPayload = {
             'amount': amount.toString(),
             'target': tokenOut,
@@ -60,7 +66,6 @@ export const getBarterAmountAndSwap = async (slippage: number, amount: number, t
         if (!quote) return null
 
         const swapData = await getBarterSwap(slippage, amount, tokenIn, tokenOut, quote.outputWithGasAmount, receiver)
-
         return swapData
 
     } catch (error) {

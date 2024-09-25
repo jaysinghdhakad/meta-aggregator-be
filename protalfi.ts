@@ -6,6 +6,8 @@ import { getChainName } from "./utils";
 // This function queries the portalfi protocol and returns the swap data. Also give the gas estimate if getGasEstimate is true. The sender and receiver should be the same if you want to get the swap data.
 export const getPortalfiSwap = async (chainId: number, slippage: number, amount: number, tokenIn: string, tokenOut: string, sender: string, receiver: string, getGasEstimate: boolean) => {
     if(sender != receiver) return null
+    if (tokenOut == process.env.ETH_ADDRESS_ENSO) { tokenOut = process.env.ETH_ADDRESS || "0x0000000000000000000000000000000000000000" }
+    if (tokenIn == process.env.ETH_ADDRESS_ENSO) { tokenIn = process.env.ETH_ADDRESS || "0x0000000000000000000000000000000000000000" }
     const chainName = getChainName(chainId)
     const params = qs.stringify({
         sender: sender,
@@ -31,6 +33,8 @@ export const getPortalfiSwap = async (chainId: number, slippage: number, amount:
 // This function queries the portalfi protocol and returns the quote amount out. The sender and receiver should be the same if you want to get the quote amount out.
 export const getPortalfiQuote = async (chainId: number, amount: number, tokenIn: string, tokenOut: string, sender: string, receiver: string) => {
     if(sender != receiver) return null
+    if (tokenOut == process.env.ETH_ADDRESS_ENSO) { tokenOut = process.env.ETH_ADDRESS || "0x0000000000000000000000000000000000000000" }
+    if (tokenIn == process.env.ETH_ADDRESS_ENSO) { tokenIn = process.env.ETH_ADDRESS || "0x0000000000000000000000000000000000000000" }
     const chainName = getChainName(chainId)
     const params = qs.stringify({
         inputToken: `${chainName}:${tokenIn}`,

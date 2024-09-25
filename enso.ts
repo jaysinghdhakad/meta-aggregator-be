@@ -4,9 +4,7 @@ import 'dotenv/config'
 
 // This function queries the enso protocol and returns the swap data.
 export const getEnsoSwap = async (chainID: number, slippage: number, amount: number, tokenIn: string, tokenOut: string, sender: string, receiver: string) => {
-    if (tokenOut == process.env.ETH_ADDRESS) { tokenOut = process.env.ETH_ADDRESS_ENSO || "0xeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee" }
-    if (tokenIn == process.env.ETH_ADDRESS) { tokenIn = process.env.ETH_ADDRESS_ENSO || "0xeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee" }
-    const params = qs.stringify({
+   const params = qs.stringify({
         chainId: chainID,
         fromAddress: sender,
         spender: sender,
@@ -35,9 +33,7 @@ export const getEnsoSwap = async (chainID: number, slippage: number, amount: num
 
 // This function queries the enso protocol and returns the quote amount out.
 export const getEnsoQuote = async (chainID: number, amount: number, tokenIn: string, tokenOut: string) => {
-    if (tokenOut == process.env.ETH_ADDRESS) { tokenOut = process.env.ETH_ADDRESS_ENSO || "0xeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee" }
-    if (tokenIn == process.env.ETH_ADDRESS) { tokenIn = process.env.ETH_ADDRESS_ENSO || "0xeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee" }
-    const params = qs.stringify({
+   const params = qs.stringify({
         chainId: chainID,
         amountIn: [amount.toString()],
         tokenIn: [tokenIn],
