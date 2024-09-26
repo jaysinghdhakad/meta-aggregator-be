@@ -1,4 +1,4 @@
-import { getPortalfiSwap } from "./protalfi";
+import { getPortalfiSwap } from "./portalfi";
 import { getEnsoSwap } from "./enso";
 import { getBarterAmountAndSwap } from "./barter";
 import { findMax, getApprovalAddressForChain, getMinAmountOut } from "./utils";

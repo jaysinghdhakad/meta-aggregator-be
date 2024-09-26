@@ -1,19 +1,19 @@
 import axios from "axios";
 import 'dotenv/config'
-
+import { getMinAmountOut } from "./utils"
 // This function queries the barter protocol and returns the swap data.
 export const getBarterSwap = async (slippage: number, amount: number, tokenIn: string, tokenOut: string, minOutputAmount: number, receipt: string) => {
     try {
         if (tokenOut == process.env.ETH_ADDRESS_ENSO) { tokenOut = process.env.ETH_ADDRESS || "0x0000000000000000000000000000000000000000" }
         if (tokenIn == process.env.ETH_ADDRESS_ENSO) { tokenIn = process.env.ETH_ADDRESS || "0x0000000000000000000000000000000000000000" }
-
+        const amountOut = getMinAmountOut(minOutputAmount.toString(), slippage)
         const swapRequestPayload =
         {
             'recipient': receipt,
             'amount': amount.toString(),
             'target': tokenOut,
             'source': tokenIn,
-            'targetTokenMinReturn': `${Math.ceil((minOutputAmount / 100) * (100 - slippage))}`,
+            'targetTokenMinReturn': `${amountOut}`,
             'deadline': `${Math.floor(Date.now() / 1000 + 300)}`
         }
 
