@@ -9,20 +9,23 @@ export const getPortalfiSwap = async (chainId: number, slippage: number, amount:
     if (tokenOut == process.env.ETH_ADDRESS_ENSO) { tokenOut = process.env.ETH_ADDRESS || "0x0000000000000000000000000000000000000000" }
     if (tokenIn == process.env.ETH_ADDRESS_ENSO) { tokenIn = process.env.ETH_ADDRESS || "0x0000000000000000000000000000000000000000" }
     const chainName = getChainName(chainId)
+
     const params = qs.stringify({
         sender: sender,
         inputToken: `${chainName}:${tokenIn}`,
         outputToken: `${chainName}:${tokenOut}`,
         inputAmount: amount,
         slippageTolerancePercentage: slippage,
-        validate: getGasEstimate
+        validate: getGasEstimate,
+        feePercentage: process.env.PORTALFI_FEE,
+        partner: process.env.FEE_RECEIVER
     })
 
     try {
         const response = await axios.get(`https://api.portals.fi/v2/portal?${params}`, {
             headers: { Authorization: `${process.env.PORTALFI_API_KEY}` }
         })
-
+        console.log("portalfi swap response", response.data)
         return response.data
     } catch (error) {
         console.log(error)
@@ -47,7 +50,7 @@ export const getPortalfiQuote = async (chainId: number, amount: number, tokenIn:
         const response = await axios.get(`https://api.portals.fi/v2/portal/estimate?${params}`, {
             headers: { Authorization: `${process.env.PORTALFI_API_KEY}` }
         })
-    
+      console.log("portalfi quote response", response.data)
         return response.data
     } catch (error) {
         console.log(error)

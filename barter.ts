@@ -1,14 +1,20 @@
 import axios from "axios";
 import 'dotenv/config'
 import { getMinAmountOut } from "./utils"
+import BigNumber from "bignumber.js";
+
 // This function queries the barter protocol and returns the swap data.
 export const getBarterSwap = async (slippage: number, amount: number, tokenIn: string, tokenOut: string, minOutputAmount: number, receipt: string) => {
     try {
         if (tokenOut == process.env.ETH_ADDRESS_ENSO) { tokenOut = process.env.ETH_ADDRESS || "0x0000000000000000000000000000000000000000" }
         if (tokenIn == process.env.ETH_ADDRESS_ENSO) { tokenIn = process.env.ETH_ADDRESS || "0x0000000000000000000000000000000000000000" }
         const amountOut = getMinAmountOut(minOutputAmount.toString(), slippage)
-        const swapRequestPayload =
-        {
+        const fee =  BigNumber(amount).times(process.env.BARTER_FEE || 0.1).div(100).toFixed(0)
+        const swapRequestPayload = {
+            'sourceFee': {
+                'recipient': process.env.FEE_RECEIVER,
+                'amount': fee.toString(),
+            },
             'recipient': receipt,
             'amount': amount.toString(),
             'target': tokenOut,
@@ -28,6 +34,7 @@ export const getBarterSwap = async (slippage: number, amount: number, tokenIn: s
         return swapResponse.data
 
     } catch (error) {
+        console.log(error)
         return null
     }
 
