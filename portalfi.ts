@@ -25,10 +25,10 @@ export const getPortalfiSwap = async (chainId: number, slippage: number, amount:
         const response = await axios.get(`https://api.portals.fi/v2/portal?${params}`, {
             headers: { Authorization: `${process.env.PORTALFI_API_KEY}` }
         })
-        console.log("portalfi swap response", response.data)
+
         return response.data
     } catch (error) {
-        console.log(error)
+        console.log("portalfi swap error", error)
         return null
     }
 }
@@ -53,7 +53,7 @@ export const getPortalfiQuote = async (chainId: number, amount: number, tokenIn:
       console.log("portalfi quote response", response.data)
         return response.data
     } catch (error) {
-        console.log(error)
+        console.log("portalfi quote error", error)
         return null
     }
 }

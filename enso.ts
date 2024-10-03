@@ -25,17 +25,16 @@ export const getEnsoSwap = async (chainID: number, slippage: number, amount: num
                 Authorization: process.env.ENSO_API_KEY
             }
         })
-
-
         return response.data
     } catch (error) {
+        console.log("enso swap error", error)
         return null
     }
 }
 
 // This function queries the enso protocol and returns the quote amount out.
 export const getEnsoQuote = async (chainID: number, amount: number, tokenIn: string, tokenOut: string) => {
-   const params = qs.stringify({
+    const params = qs.stringify({
         chainId: chainID,
         amountIn: [amount.toString()],
         tokenIn: [tokenIn],
@@ -54,6 +53,7 @@ export const getEnsoQuote = async (chainID: number, amount: number, tokenIn: str
         return response.data
     }
     catch (error) {
+        console.log("enso quote error", error)
         return null
     }
 }

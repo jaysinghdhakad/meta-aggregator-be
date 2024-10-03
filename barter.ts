@@ -9,7 +9,7 @@ export const getBarterSwap = async (slippage: number, amount: number, tokenIn: s
         if (tokenOut == process.env.ETH_ADDRESS_ENSO) { tokenOut = process.env.ETH_ADDRESS || "0x0000000000000000000000000000000000000000" }
         if (tokenIn == process.env.ETH_ADDRESS_ENSO) { tokenIn = process.env.ETH_ADDRESS || "0x0000000000000000000000000000000000000000" }
         const amountOut = getMinAmountOut(minOutputAmount.toString(), slippage)
-        const fee =  BigNumber(amount).times(process.env.BARTER_FEE || 0.1).div(100).toFixed(0)
+        const fee = BigNumber(amount).times(process.env.BARTER_FEE || 0.1).div(100).toFixed(0)
         const swapRequestPayload = {
             'sourceFee': {
                 'recipient': process.env.FEE_RECEIVER,
@@ -34,10 +34,9 @@ export const getBarterSwap = async (slippage: number, amount: number, tokenIn: s
         return swapResponse.data
 
     } catch (error) {
-        console.log(error)
+        console.log("barter swap error", error)
         return null
     }
-
 }
 
 // This function queries the barter protocol and returns the quote.
@@ -62,6 +61,7 @@ export const getBarterQuote = async (amount: number, tokenIn: string, tokenOut: 
 
         return routeData.data
     } catch (error) {
+        console.log("barter quote error", error)
         return null
     }
 }
