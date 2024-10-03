@@ -1,5 +1,7 @@
 import BigNumber from "bignumber.js";
 import { baseChainID } from "./config";
+import { ERC20ABI } from "./ERC20.abi.ts";
+import { ethers } from "ethers";
 
 // This function finds the max of three numbers.
 export function findMax(a: any, b: any, c: any) {
@@ -12,7 +14,7 @@ export function findMax(a: any, b: any, c: any) {
 export function getApprovalAddressForChain(protocol: string, chainId: number) {
     if (chainId === baseChainID) {
         if (protocol === "portalfi") {
-            return  process.env.PORTALFI_APPROVAL_ADDRESS_BASE
+            return process.env.PORTALFI_APPROVAL_ADDRESS_BASE
         }
 
         if (protocol === "enso") {
@@ -22,7 +24,7 @@ export function getApprovalAddressForChain(protocol: string, chainId: number) {
         if (protocol === "barter") {
             return process.env.BARTER_APPROVAL_ADDRESS_BASE
         }
-        
+
     }
 }
 
@@ -35,4 +37,25 @@ export function getChainName(chainId: number) {
 
 export function getMinAmountOut(amountOut: string, slippage: number) {
     return BigNumber(amountOut).minus(BigNumber(amountOut).times(slippage / 100)).toFixed(0)
+}
+
+export function getProvider(chainId: number) {
+    if (chainId === baseChainID) {
+        return new ethers.JsonRpcProvider(process.env.BASE_RPC_URL)
+    }
+}
+
+export function getApprovalData(chainId: number, amount: string, tokenAddress: string, approvalAddress: string) {
+    try {
+        if (chainId === baseChainID) {
+            const provider = getProvider(chainId)
+            const tokenContract = new ethers.Contract(tokenAddress, ERC20ABI, provider)
+            const calldata = tokenContract.interface.encodeFunctionData('approve', [approvalAddress, ethers.parseUnits(amount)])
+            return calldata
+        }
+    }
+    catch (error) {
+        console.log("error", error)
+        return null
+    }
 }

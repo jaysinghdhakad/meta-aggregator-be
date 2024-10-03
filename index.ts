@@ -114,7 +114,7 @@ app.post('/best-quote', validateRequest(['slippage', 'amount', 'tokenIn', 'token
   // sort the quotes by amount out and return the quote with the max amount out
   amount = BigNumber(amount).toFixed(0)
   const swapData = await sortOrder(chainId, slippage, amount, tokenIn, tokenOut, sender, receiver)
-  if (swapData == null) return res.status(404).send({ message: "No quotes found" });
+  if (swapData.length == 0) return res.status(404).send({ message: "No quotes found" });
   res.send(swapData);
 });
 
