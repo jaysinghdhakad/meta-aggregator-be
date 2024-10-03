@@ -8,6 +8,7 @@ import swaggerDocument from './swagger.json';
 import { baseChainID } from "./config";
 import { ethers } from "ethers";
 import { PROTOCOLS } from "./protocol";
+import BigNumber from "bignumber.js";
 
 
 const app = express();
@@ -53,7 +54,6 @@ const validateSwapParams = (
   const { tokenIn, tokenOut, amount, receiver, sender, chainId, slippage, protocol, amountOut } = req.body;
 
   const errors: string[] = [];
-
   // Validate token addresses
   if (tokenIn && !ethers.isAddress(tokenIn)) {
     errors.push("Invalid tokenIn address");
@@ -74,7 +74,7 @@ const validateSwapParams = (
   if (sender && !ethers.isAddress(sender)) {
     errors.push("Invalid sender address");
   }
-
+  
   if (chainId !== baseChainID) {
     errors.push(`Invalid chain ID. Expected ${baseChainID}`);
   }
@@ -90,6 +90,7 @@ const validateSwapParams = (
   if (amountOut && (isNaN(parseFloat(amountOut)) || parseFloat(amountOut) <= 0)) {
     errors.push("Invalid amountOut: must be a positive number");
   }
+
 
   if (errors.length > 0) {
     return res.status(400).json({ errors });
@@ -109,8 +110,9 @@ const validateRequest = (requiredFields: string[]) => {
 
 // This is for the best quote with swap data. This endpoint queries all protocols and returns the best quote with swap data. Won't return gas estimate for portalfi. Would not return quote from protalfi if sender is not receiver.
 app.post('/best-quote', validateRequest(['slippage', 'amount', 'tokenIn', 'tokenOut', 'sender', 'receiver', 'chainId']), async (req: express.Request, res: express.Response) => {
-  const { slippage, amount, tokenIn, tokenOut, sender, receiver, chainId } = req.body;
+  let { slippage, amount, tokenIn, tokenOut, sender, receiver, chainId } = req.body;
   // sort the quotes by amount out and return the quote with the max amount out
+  amount = BigNumber(amount).toFixed(0)
   const swapData = await sortOrder(chainId, slippage, amount, tokenIn, tokenOut, sender, receiver)
   if (swapData == null) return res.status(404).send({ message: "No quotes found" });
   res.send(swapData);
@@ -118,17 +120,22 @@ app.post('/best-quote', validateRequest(['slippage', 'amount', 'tokenIn', 'token
 
 //This is for the best amount out. This endpoint queries all protocols and returns the best amount out. Also give the approval address for the best quote.Would not return amount from protalfi if sender is not receiver.
 app.post('/best-amount-out', validateRequest(['amount', 'tokenIn', 'tokenOut', 'sender', 'receiver', 'chainId']), async (req: express.Request, res: express.Response) => {
-  const { amount, tokenIn, tokenOut, sender, receiver, chainId } = req.body;
+  let { amount, tokenIn, tokenOut, sender, receiver, chainId } = req.body;
   // sort the quotes by amount out and return the quote with the max amount out
+  amount = BigNumber(amount).toFixed(0)
+
   const response = await getAmountOut(chainId, amount, tokenIn, tokenOut, sender, receiver);
+
   if (response == null) return res.status(404).send({ message: "No quotes found" });
   res.send(response);
 });
 
 // This end point is for the swap data. This endpoint queries the protocol sent in by the user and returns the swap data. Also give the approval address for the best quote.Would not return amount from protalfi if sender is not receiver.
 app.post('/swap-data', validateRequest(['slippage', 'amount', 'tokenIn', 'tokenOut', 'sender', 'amountOut', 'protocol', 'receiver', 'chainId']), async (req: express.Request, res: express.Response) => {
-  const { slippage, amount, tokenIn, tokenOut, sender, amountOut, protocol, receiver, chainId } = req.body;
+  let { slippage, amount, tokenIn, tokenOut, sender, amountOut, protocol, receiver, chainId } = req.body;
   // get the swap data from the protocol sent in by the user
+  amount = BigNumber(amount).toFixed(0)
+  amountOut = BigNumber(amountOut).toFixed(0)
   const swapData = await getSwapData(chainId, protocol, slippage, amount, tokenIn, tokenOut, sender, receiver, amountOut);
   if (swapData == null) return res.status(404).send({ message: "No swap data found" });
   res.send(swapData);
