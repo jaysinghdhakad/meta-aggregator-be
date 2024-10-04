@@ -61,14 +61,13 @@ export const sortOrder = async (chainID: number, slippage: number, amount: numbe
 
   if (ensoResult && ensoResult.simulationPassed.status) {
     const minAmountOut = getMinAmountOut(ensoResult.quote.amountOut, slippage);
-    const approvalAddress = getApprovalAddressForChain(ENSO_PROTOCOL, chainID);
     quotes.push({
       protocol: "enso",
       to: ensoResult.quote.tx.to,
       data: ensoResult.quote.tx.data,
       value: ensoResult.quote.tx.value,
       amountOut: ensoResult.quote.amountOut,
-      approvalAddress: approvalAddress,
+      approvalAddress: ensoResult.quote.tx.to,
       minAmountOut: minAmountOut,
       gasEstimate: ensoResult.quote.gas,
       simulationStatus: ensoResult.simulationPassed.status
