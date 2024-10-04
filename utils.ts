@@ -50,7 +50,7 @@ export function getApprovalData(chainId: number, amount: string, tokenAddress: s
         if (chainId === baseChainID) {
             const provider = getProvider(chainId)
             const tokenContract = new ethers.Contract(tokenAddress, ERC20ABI, provider)
-            const calldata = tokenContract.interface.encodeFunctionData('approve', [approvalAddress, ethers.parseUnits(amount)])
+            const calldata = tokenContract.interface.encodeFunctionData('approve', [approvalAddress, amount])
             return calldata
         }
     }
