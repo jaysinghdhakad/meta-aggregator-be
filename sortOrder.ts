@@ -1,10 +1,8 @@
 import { getPortalfiSwap } from "./portalfi";
 import { getEnsoSwap } from "./enso";
 import { getBarterAmountAndSwap } from "./barter";
-import { getApprovalAddressForChain, getMinAmountOut } from "./utils";
-import { ENSO_PROTOCOL } from "./protocol";
 import { generateSimulationData, checkExecutionNotReverted } from "./simulation";
-
+import { getMinAmountOut } from "./utils";
 export const sortOrder = async (chainID: number, slippage: number, amount: number, tokenIn: string, tokenOut: string, sender: string, receiver: string) => {
   const isEth = tokenIn.toLowerCase() === '0xeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee';
 

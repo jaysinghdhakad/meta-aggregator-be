@@ -4,7 +4,7 @@ import { getBarterSwap } from "./barter";
 import { getApprovalAddressForChain,getMinAmountOut } from "./utils";
 
 // This function queries the protocol sent in by the user and returns the swap data.
-export async function getSwapData(chainId: number, protocol: string, slippage: number, amount: number, tokenIn: string, tokenOut: string, sender: string, receiver: string,amountOut: number) {
+export async function getSwapData(chainId: number, protocol: string, slippage: number, amount: string, tokenIn: string, tokenOut: string, sender: string, receiver: string,amountOut: number) {
     if (protocol === "portalfi") {
       // query the protocol for the swap data
       const response = await getPortalfiSwap(chainId, slippage, amount, tokenIn, tokenOut, sender, receiver, true);

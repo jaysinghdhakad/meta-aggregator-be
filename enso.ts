@@ -3,7 +3,7 @@ import qs from "qs";
 import 'dotenv/config'
 
 // This function queries the enso protocol and returns the swap data.
-export const getEnsoSwap = async (chainID: number, slippage: number, amount: number, tokenIn: string, tokenOut: string, sender: string, receiver: string) => {
+export const getEnsoSwap = async (chainID: number, slippage: number, amount: string, tokenIn: string, tokenOut: string, sender: string, receiver: string) => {
    const params = qs.stringify({
         chainId: chainID,
         fromAddress: sender,
