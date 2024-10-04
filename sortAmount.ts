@@ -5,7 +5,7 @@ import { findMax,getApprovalAddressForChain } from "./utils";
 import { ENSO_PROTOCOL, PORTALFI_PROTOCOL, BARTER_PROTOCOL } from "./protocol";
 
 // This function queries all protocols and returns the best amount out. Also give the approval address for the best quote.
-export async function getAmountOut(chainID: number, amount: number, tokenIn: string, tokenOut: string, sender: string, receiver: string) {
+export async function getAmountOut(chainID: number, amount: string, tokenIn: string, tokenOut: string, sender: string, receiver: string) {
     // query all protocols for the quote output amount.
     const [portalfi, enso, barter] = await Promise.all([
         getPortalfiQuote(chainID, amount, tokenIn, tokenOut, sender, receiver),

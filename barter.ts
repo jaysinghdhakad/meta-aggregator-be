@@ -40,7 +40,7 @@ export const getBarterSwap = async (slippage: number, amount: string, tokenIn: s
 }
 
 // This function queries the barter protocol and returns the quote.
-export const getBarterQuote = async (amount: number, tokenIn: string, tokenOut: string) => {
+export const getBarterQuote = async (amount: string, tokenIn: string, tokenOut: string) => {
     try {
         if (tokenOut == process.env.ETH_ADDRESS_ENSO) { tokenOut = process.env.ETH_ADDRESS || "0x0000000000000000000000000000000000000000" }
         if (tokenIn == process.env.ETH_ADDRESS_ENSO) { tokenIn = process.env.ETH_ADDRESS || "0x0000000000000000000000000000000000000000" }
@@ -67,7 +67,7 @@ export const getBarterQuote = async (amount: number, tokenIn: string, tokenOut: 
 }
 
 // This function queries the barter protocol and returns the amount and swap data.
-export const getBarterAmountAndSwap = async (slippage: number, amount: number, tokenIn: string, tokenOut: string, receiver: string) => {
+export const getBarterAmountAndSwap = async (slippage: number, amount: string, tokenIn: string, tokenOut: string, receiver: string) => {
     try {
         const quote = await getBarterQuote(amount, tokenIn, tokenOut)
         if (!quote) return null

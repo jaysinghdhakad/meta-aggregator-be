@@ -34,7 +34,7 @@ export const getPortalfiSwap = async (chainId: number, slippage: number, amount:
 }
 
 // This function queries the portalfi protocol and returns the quote amount out. The sender and receiver should be the same if you want to get the quote amount out.
-export const getPortalfiQuote = async (chainId: number, amount: number, tokenIn: string, tokenOut: string, sender: string, receiver: string) => {
+export const getPortalfiQuote = async (chainId: number, amount: string, tokenIn: string, tokenOut: string, sender: string, receiver: string) => {
     if(sender != receiver) return null
     if (tokenOut == process.env.ETH_ADDRESS_ENSO) { tokenOut = process.env.ETH_ADDRESS || "0x0000000000000000000000000000000000000000" }
     if (tokenIn == process.env.ETH_ADDRESS_ENSO) { tokenIn = process.env.ETH_ADDRESS || "0x0000000000000000000000000000000000000000" }

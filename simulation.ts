@@ -42,7 +42,7 @@ export const checkExecutionNotReverted = async (transactionData: ITransactionDat
 
 export async function generateSimulationData(
     chainId: number,
-    amount: number,
+    amount: string,
     tokenAddress: string,
     userAddress: string,
     swapContractAddress: string,
@@ -53,7 +53,7 @@ export async function generateSimulationData(
 
     if (!isEth) {
         // Add approval transaction for non-ETH tokens
-        const approvalData = getApprovalData(chainId, BigNumber(amount).toFixed(0), tokenAddress, swapContractAddress);
+        const approvalData = getApprovalData(chainId, amount, tokenAddress, swapContractAddress);
         simulationData.push({
             from: userAddress,
             to: tokenAddress,

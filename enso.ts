@@ -33,7 +33,7 @@ export const getEnsoSwap = async (chainID: number, slippage: number, amount: str
 }
 
 // This function queries the enso protocol and returns the quote amount out.
-export const getEnsoQuote = async (chainID: number, amount: number, tokenIn: string, tokenOut: string) => {
+export const getEnsoQuote = async (chainID: number, amount: string, tokenIn: string, tokenOut: string) => {
     const params = qs.stringify({
         chainId: chainID,
         amountIn: [amount.toString()],
