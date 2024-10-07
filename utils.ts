@@ -48,11 +48,13 @@ export function getProvider(chainId: number) {
 export function getApprovalData(chainId: number, amount: string, tokenAddress: string, approvalAddress: string) {
     try {
         if (chainId === baseChainID) {
+            console.log("amount______________", amount)
             const provider = getProvider(chainId)
             const tokenContract = new ethers.Contract(tokenAddress, ERC20ABI, provider)
             const calldata = tokenContract.interface.encodeFunctionData('approve', [approvalAddress, ethers.toBigInt(amount)])
             return calldata
         }
+        console.log("chainId______________", chainId)
     }
     catch (error) {
         console.log("error", error)

@@ -30,8 +30,8 @@ export const checkExecutionNotReverted = async (transactionData: ITransactionDat
         ).data
 
 
-        const status = response.simulation_results[1].transaction.status
-        const gas = response.simulation_results[1].transaction.gas
+        const status = response.simulation_results[transactionData.length - 1].transaction.status
+        const gas = response.simulation_results[transactionData.length - 1].transaction.gas
         return { status: status, gas: gas }
     } catch (err) {
         return { status: false, gas: 0 }
