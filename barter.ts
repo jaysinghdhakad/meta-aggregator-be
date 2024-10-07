@@ -69,6 +69,14 @@ export const getBarterQuote = async (amount: string, tokenIn: string, tokenOut: 
 // This function queries the barter protocol and returns the amount and swap data.
 export const getBarterAmountAndSwap = async (slippage: number, amount: string, tokenIn: string, tokenOut: string, receiver: string) => {
     try {
+        console.log("barter params", {
+            amount: amount,
+            tokenIn: tokenIn,
+            tokenOut: tokenOut,
+            receiver: receiver,
+            slippage: slippage,
+            fee: process.env.BARTER_FEE
+        })
         const quote = await getBarterQuote(amount, tokenIn, tokenOut)
         if (!quote) return null
 

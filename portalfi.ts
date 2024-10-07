@@ -9,7 +9,16 @@ export const getPortalfiSwap = async (chainId: number, slippage: number, amount:
     if (tokenOut == process.env.ETH_ADDRESS_ENSO) { tokenOut = process.env.ETH_ADDRESS || "0x0000000000000000000000000000000000000000" }
     if (tokenIn == process.env.ETH_ADDRESS_ENSO) { tokenIn = process.env.ETH_ADDRESS || "0x0000000000000000000000000000000000000000" }
     const chainName = getChainName(chainId)
-
+    console.log("portalfi params", {
+        sender: sender,
+        inputToken: `${chainName}:${tokenIn}`,
+        outputToken: `${chainName}:${tokenOut}`,
+        inputAmount: amount,
+        slippageTolerancePercentage: slippage,
+        validate: getGasEstimate,
+        feePercentage: process.env.PORTALFI_FEE,
+        partner: process.env.FEE_RECEIVER
+    })
     const params = qs.stringify({
         sender: sender,
         inputToken: `${chainName}:${tokenIn}`,

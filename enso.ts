@@ -4,7 +4,19 @@ import 'dotenv/config'
 
 // This function queries the enso protocol and returns the swap data.
 export const getEnsoSwap = async (chainID: number, slippage: number, amount: string, tokenIn: string, tokenOut: string, sender: string, receiver: string) => {
-   const params = qs.stringify({
+    console.log("enso params", {
+        chainId: chainID,
+        fromAddress: sender,
+        spender: sender,
+        amountIn: [amount.toString()],
+        tokenIn: [tokenIn],
+        tokenOut: [tokenOut],
+        slippage: (slippage * 100).toString(),
+        receiver: receiver,
+        fee: process.env.ENSO_FEE,
+        feeReceiver: process.env.FEE_RECEIVER
+    })
+    const params = qs.stringify({
         chainId: chainID,
         fromAddress: sender,
         spender: sender,
