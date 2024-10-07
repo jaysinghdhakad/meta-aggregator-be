@@ -31,7 +31,7 @@ export const checkExecutionNotReverted = async (transactionData: ITransactionDat
             )
         ).data
 
-
+        console.log("response Simulation", response.data)
         const status = response.simulation_results[transactionData.length - 1].transaction.status
         const gas = response.simulation_results[transactionData.length - 1].transaction.gas
         return { status: status, gas: gas }
