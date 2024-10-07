@@ -7,6 +7,8 @@ import 'dotenv/config'
 export const checkExecutionNotReverted = async (transactionData: ITransactionData[], chainId: number) : Promise<{status: boolean, gas: number}> => {
     try {
 
+        console.log("transactionData", transactionData)
+
         const response = (
             await axios.post(
                 `https://api.tenderly.co/api/v1/account/${process.env.TENDERLY_ACCOUNT_SLUG}/project/${process.env.TENDERLY_PROJECT_SLUG}/simulate-bundle`,
