@@ -89,6 +89,51 @@ export const sortOrder = async (chainID: number, slippage: number, amount: strin
 
   // Sort quotes in descending order based on amountOut
   quotes.sort((a, b) => b.amountOut - a.amountOut);
-  console.log(quotes)
+  // add the quotes that failed simulation with message "Increase slippage for swap"
+  if(ensoResult && !ensoResult.simulationPassed.status && ensoResult.simulationPassed.message == "Increase slippage for swap") { 
+    quotes.push({
+      protocol: "enso",
+      message: "Increase slippage for swap",
+      amountOut: ensoResult.quote.amountOut,
+      to: ensoResult.quote.tx.to,
+      data: ensoResult.quote.tx.data,
+      value: ensoResult.quote.tx.value,
+      minAmountOut: ensoResult.quote.context.minOutputAmount,
+      gasEstimate: ensoResult.quote.gas,
+      approvalAddress: ensoResult.quote.tx.to,
+      simulationStatus: ensoResult.simulationPassed.status
+    })
+  }
+
+  if(barterResult && !barterResult.simulationPassed.status && barterResult.simulationPassed.message == "Increase slippage for swap") { 
+    quotes.push({
+      protocol: "barter",
+      message: "Increase slippage for swap",
+      amountOut: barterResult.quote.route.outputAmount,
+      to: barterResult.quote.to,
+      data: barterResult.quote.data,
+      value: barterResult.quote.value,
+      minAmountOut: barterResult.quote.route.outputAmount,
+      gasEstimate: barterResult.quote.route.gasEstimation,
+      approvalAddress: barterResult.quote.to,
+      simulationStatus: barterResult.simulationPassed.status
+    })
+  }
+
+  if(portalfiResult && !portalfiResult.simulationPassed.status && portalfiResult.simulationPassed.message == "Increase slippage for swap") { 
+    quotes.push({
+      protocol: "portalfi",
+      message: "Increase slippage for swap",
+      amountOut: portalfiResult.quote.context.outputAmount,
+      to: portalfiResult.quote.tx.to,
+      data: portalfiResult.quote.tx.data,
+      value: portalfiResult.quote.tx.value,
+      minAmountOut: portalfiResult.quote.context.minOutputAmount,
+      gasEstimate: portalfiResult.quote.gas,
+      approvalAddress: portalfiResult.quote.tx.to,
+      simulationStatus: portalfiResult.simulationPassed.status
+    })
+  }
+
   return quotes
 }

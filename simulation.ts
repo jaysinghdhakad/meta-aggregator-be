@@ -4,11 +4,8 @@ import { getApprovalData } from "./utils";
 import BigNumber from "bignumber.js";
 import 'dotenv/config'
 
-export const checkExecutionNotReverted = async (transactionData: ITransactionData[], chainId: number) : Promise<{status: boolean, gas: number}> => {
+export const checkExecutionNotReverted = async (transactionData: ITransactionData[], chainId: number) : Promise<{status: boolean, gas: number, message: string}> => {
     try {
-
-        console.log("transactionData", transactionData)
-
         const response = (
             await axios.post(
                 `https://api.tenderly.co/api/v1/account/${process.env.TENDERLY_ACCOUNT_SLUG}/project/${process.env.TENDERLY_PROJECT_SLUG}/simulate-bundle`,
@@ -30,13 +27,17 @@ export const checkExecutionNotReverted = async (transactionData: ITransactionDat
                 }
             )
         ).data
-
-        console.log("response Simulation", response.simulation_results[transactionData.length - 1].transaction)
+        let message = ""
+        if(!response.simulation_results[transactionData.length - 1].transaction.status) {
+            if(response.simulation_results[transactionData.length - 1].transaction.error_info.address.localeCompare(transactionData[transactionData.length - 1].to)) { 
+                message = "Increase slippage for swap"
+            }
+        }
         const status = response.simulation_results[transactionData.length - 1].transaction.status
         const gas = response.simulation_results[transactionData.length - 1].transaction.gas
-        return { status: status, gas: gas }
+        return { status: status, gas: gas, message: message }
     } catch (err) {
-        return { status: false, gas: 0 }
+        return { status: false, gas: 0, message: "" }
     }
 }
 
