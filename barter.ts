@@ -4,7 +4,7 @@ import { getMinAmountOut } from "./utils"
 import BigNumber from "bignumber.js";
 
 // This function queries the barter protocol and returns the swap data.
-export const getBarterSwap = async (slippage: number, amount: string, tokenIn: string, tokenOut: string, minOutputAmount: number, receipt: string) => {
+export const getBarterSwap = async (slippage: number, amount: string, tokenIn: string, tokenOut: string, minOutputAmount: string, receipt: string) => {
     try {
         if (tokenOut == process.env.ETH_ADDRESS_ENSO) { tokenOut = process.env.ETH_ADDRESS || "0x0000000000000000000000000000000000000000" }
         if (tokenIn == process.env.ETH_ADDRESS_ENSO) { tokenIn = process.env.ETH_ADDRESS || "0x0000000000000000000000000000000000000000" }
@@ -69,18 +69,11 @@ export const getBarterQuote = async (amount: string, tokenIn: string, tokenOut: 
 // This function queries the barter protocol and returns the amount and swap data.
 export const getBarterAmountAndSwap = async (slippage: number, amount: string, tokenIn: string, tokenOut: string, receiver: string) => {
     try {
-        console.log("barter params", {
-            amount: amount,
-            tokenIn: tokenIn,
-            tokenOut: tokenOut,
-            receiver: receiver,
-            slippage: slippage,
-            fee: process.env.BARTER_FEE
-        })
         const quote = await getBarterQuote(amount, tokenIn, tokenOut)
         if (!quote) return null
 
         const swapData = await getBarterSwap(slippage, amount, tokenIn, tokenOut, quote.outputWithGasAmount, receiver)
+
         return swapData
 
     } catch (error) {

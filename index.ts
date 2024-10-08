@@ -108,10 +108,10 @@ const validateRequest = (requiredFields: string[]) => {
 };
 
 
-// This is for the best quote with swap data. This endpoint queries all protocols and returns the best quote with swap data. Won't return gas estimate for portalfi. Would not return quote from protalfi if sender is not receiver.
-app.post('/best-quote', validateRequest(['slippage', 'amount', 'tokenIn', 'tokenOut', 'sender', 'receiver', 'chainId']), async (req: express.Request, res: express.Response) => {
+// This is for the best quotes with swap data. This endpoint queries all protocols and returns the best quotes with swap data in descending order of amount out
+app.post('/best-quotes', validateRequest(['slippage', 'amount', 'tokenIn', 'tokenOut', 'sender', 'receiver', 'chainId']), async (req: express.Request, res: express.Response) => {
   let { slippage, amount, tokenIn, tokenOut, sender, receiver, chainId } = req.body;
-  // sort the quotes by amount out and return the quote with the max amount out
+  // sort the quotes by amount out and return the quotes in descending order of amount out
   const swapData = await sortOrder(chainId, slippage, amount, tokenIn, tokenOut, sender, receiver)
   if (swapData.length == 0) return res.status(404).send({ message: "No quotes found" });
   res.send(swapData);
@@ -121,7 +121,6 @@ app.post('/best-quote', validateRequest(['slippage', 'amount', 'tokenIn', 'token
 app.post('/best-amount-out', validateRequest(['amount', 'tokenIn', 'tokenOut', 'sender', 'receiver', 'chainId']), async (req: express.Request, res: express.Response) => {
   let { amount, tokenIn, tokenOut, sender, receiver, chainId } = req.body;
   // sort the quotes by amount out and return the quote with the max amount out
-  amount = BigNumber(amount).toFixed(0)
 
   const response = await getAmountOut(chainId, amount, tokenIn, tokenOut, sender, receiver);
 
@@ -133,8 +132,6 @@ app.post('/best-amount-out', validateRequest(['amount', 'tokenIn', 'tokenOut', '
 app.post('/swap-data', validateRequest(['slippage', 'amount', 'tokenIn', 'tokenOut', 'sender', 'amountOut', 'protocol', 'receiver', 'chainId']), async (req: express.Request, res: express.Response) => {
   let { slippage, amount, tokenIn, tokenOut, sender, amountOut, protocol, receiver, chainId } = req.body;
   // get the swap data from the protocol sent in by the user
-  amount = BigNumber(amount).toFixed(0)
-  amountOut = BigNumber(amountOut).toFixed(0)
   const swapData = await getSwapData(chainId, protocol, slippage, amount, tokenIn, tokenOut, sender, receiver, amountOut);
   if (swapData == null) return res.status(404).send({ message: "No swap data found" });
   res.send(swapData);
