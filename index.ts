@@ -1,13 +1,13 @@
 import express from "express";
-import { sortOrder } from "./sortOrder";
-import { getAmountOut } from "./sortAmount";
-import { getSwapData } from "./fetchSwapData";
+import { sortOrder } from "./helpers/sortOrder";
+import { getAmountOut } from "./helpers/sortAmount";
+import { getSwapData } from "./helpers/fetchSwapData";
 import cors from "cors";
 import swaggerUi from 'swagger-ui-express';
 import swaggerDocument from './swagger.json';
-import { baseChainID } from "./config";
+import { baseChainID } from "./utils/config";
 import { ethers } from "ethers";
-import { PROTOCOLS } from "./protocol";
+import { PROTOCOLS } from "./utils/protocol";
 import BigNumber from "bignumber.js";
 
 

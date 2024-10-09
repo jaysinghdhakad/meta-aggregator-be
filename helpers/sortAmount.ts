@@ -1,8 +1,8 @@
-import { getPortalfiQuote } from "./portalfi";
-import { getEnsoQuote } from "./enso";
-import { getBarterQuote } from "./barter";
-import { findMax,getApprovalAddressForChain } from "./utils";
-import { ENSO_PROTOCOL, PORTALFI_PROTOCOL, BARTER_PROTOCOL } from "./protocol";
+import { getPortalfiQuote } from "../aggregators/portalfi";
+import { getEnsoQuote } from "../aggregators/enso";
+import { getBarterQuote } from "../aggregators/barter";
+import { findMax,getApprovalAddressForChain } from "../utils/utils";
+import { ENSO_PROTOCOL, PORTALFI_PROTOCOL, BARTER_PROTOCOL } from "../utils/protocol";
 
 // This function queries all protocols and returns the best amount out. Also give the approval address for the best quote.
 export async function getAmountOut(chainID: number, amount: string, tokenIn: string, tokenOut: string, sender: string, receiver: string) {

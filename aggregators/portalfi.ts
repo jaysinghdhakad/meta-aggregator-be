@@ -1,7 +1,7 @@
 import axios from "axios";
 import qs from "qs";
 import 'dotenv/config'
-import { getChainName } from "./utils";
+import { getChainName } from "../utils/utils";
 
 // This function queries the portalfi protocol and returns the swap data. Also give the gas estimate if getGasEstimate is true. The sender and receiver should be the same if you want to get the swap data.
 export const getPortalfiSwap = async (chainId: number, slippage: number, amount: string, tokenIn: string, tokenOut: string, sender: string, receiver: string, getGasEstimate: boolean) => {
@@ -24,7 +24,6 @@ export const getPortalfiSwap = async (chainId: number, slippage: number, amount:
         const response = await axios.get(`https://api.portals.fi/v2/portal?${params}`, {
             headers: { Authorization: `${process.env.PORTALFI_API_KEY}` }
         })
-
         return response.data
     } catch (error) {
         console.log("portalfi swap error", error)

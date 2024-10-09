@@ -1,6 +1,6 @@
 import axios from "axios";
 import 'dotenv/config'
-import { getMinAmountOut } from "./utils"
+import { getMinAmountOut } from "../utils/utils"
 import BigNumber from "bignumber.js";
 
 // This function queries the barter protocol and returns the swap data.
@@ -73,7 +73,6 @@ export const getBarterAmountAndSwap = async (slippage: number, amount: string, t
         if (!quote) return null
 
         const swapData = await getBarterSwap(slippage, amount, tokenIn, tokenOut, quote.outputWithGasAmount, receiver)
-
         return swapData
 
     } catch (error) {

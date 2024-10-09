@@ -1,13 +1,13 @@
-import { getPortalfiSwap } from "./portalfi";
-import { getEnsoSwap } from "./enso";
-import { getBarterAmountAndSwap } from "./barter";
-import { generateSimulationData, checkExecutionNotReverted } from "./simulation";
-import { getMinAmountOut } from "./utils";
+import { getPortalfiSwap } from "../aggregators/portalfi";
+import { getEnsoSwap } from "../aggregators/enso";
+import { getBarterAmountAndSwap } from "../aggregators/barter";
+import { generateSimulationData, checkExecutionNotReverted } from "../simulations/simulation";
+import { getMinAmountOut, fetchTokenPrice, calculatePriceImpactPercentage } from "../utils/utils";
 export const sortOrder = async (chainID: number, slippage: number, amount: string, tokenIn: string, tokenOut: string, sender: string, receiver: string) => {
   const isEth = tokenIn.toLowerCase() === '0xeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee';
 
   // Get quotes and run simulations for all protocols
-  const [portalfiResult, ensoResult, barterResult] = await Promise.all([
+  const [portalfiResult, ensoResult, barterResult, tokenInPriceData, tokenOutPriceData] = await Promise.all([
     getPortalfiSwap(chainID, slippage, amount, tokenIn, tokenOut, sender, receiver, false)
       .then(async (portalfi) => {
         if (!portalfi) return null;
@@ -34,8 +34,11 @@ export const sortOrder = async (chainID: number, slippage: number, amount: strin
         );
         const simulationPassed = await checkExecutionNotReverted(simulationData, chainID);
         return { quote: barter, simulationPassed };
-      })
+      }),
+    fetchTokenPrice(tokenIn, chainID),
+    fetchTokenPrice(tokenOut, chainID)
   ]);
+
 
   console.log("portalsSimulationPassed", portalfiResult?.simulationPassed.status)
   console.log("ensoSimulationPassed", ensoResult?.simulationPassed.status)
@@ -43,7 +46,8 @@ export const sortOrder = async (chainID: number, slippage: number, amount: strin
 
   const quotes = [];
 
-  if (portalfiResult && portalfiResult.simulationPassed.status) {
+if (portalfiResult && portalfiResult.simulationPassed.status) {
+    const priceImpactPercentage = calculatePriceImpactPercentage(portalfiResult.quote.context.minOutputAmount, amount, tokenInPriceData.usdPrice, tokenOutPriceData.usdPrice, tokenInPriceData.tokenDecimals  , tokenOutPriceData.tokenDecimals)
     quotes.push({
       protocol: "portalfi",
       to: portalfiResult.quote.tx.to,
@@ -53,12 +57,14 @@ export const sortOrder = async (chainID: number, slippage: number, amount: strin
       approvalAddress: portalfiResult.quote.tx.to,
       minAmountOut: portalfiResult.quote.context.minOutputAmount,
       gasEstimate: portalfiResult.simulationPassed.gas,
-      simulationStatus: portalfiResult.simulationPassed.status
+      simulationStatus: portalfiResult.simulationPassed.status,
+      priceImpactPercentage: priceImpactPercentage
     });
   }
 
   if (ensoResult && ensoResult.simulationPassed.status) {
     const minAmountOut = getMinAmountOut(ensoResult.quote.amountOut, slippage);
+    const priceImpactPercentage = calculatePriceImpactPercentage(minAmountOut, amount, tokenInPriceData.usdPrice, tokenOutPriceData.usdPrice, tokenInPriceData.tokenDecimals  , tokenOutPriceData.tokenDecimals)
     quotes.push({
       protocol: "enso",
       to: ensoResult.quote.tx.to,
@@ -68,12 +74,14 @@ export const sortOrder = async (chainID: number, slippage: number, amount: strin
       approvalAddress: ensoResult.quote.tx.to,
       minAmountOut: minAmountOut,
       gasEstimate: ensoResult.quote.gas,
-      simulationStatus: ensoResult.simulationPassed.status
+      simulationStatus: ensoResult.simulationPassed.status,
+      priceImpactPercentage: priceImpactPercentage
     });
   }
 
   if (barterResult && barterResult.simulationPassed.status) {
     const minAmountOut = getMinAmountOut(barterResult.quote.route.outputAmount, slippage);
+    const priceImpactPercentage = calculatePriceImpactPercentage(minAmountOut, amount, tokenInPriceData.usdPrice, tokenOutPriceData.usdPrice, tokenInPriceData.tokenDecimals  , tokenOutPriceData.tokenDecimals)
     quotes.push({
       protocol: "barter",
       to: barterResult.quote.to,
@@ -83,7 +91,8 @@ export const sortOrder = async (chainID: number, slippage: number, amount: strin
       approvalAddress: barterResult.quote.to,
       minAmountOut: minAmountOut,
       gasEstimate: barterResult.quote.route.gasEstimation,
-      simulationStatus: barterResult.simulationPassed.status
+      simulationStatus: barterResult.simulationPassed.status,
+      priceImpactPercentage: priceImpactPercentage
     });
   }
 

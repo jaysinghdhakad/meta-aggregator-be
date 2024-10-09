@@ -1,6 +1,6 @@
 import axios from "axios";
-import { ITransactionData } from "./types";
-import { getApprovalData } from "./utils";
+import { ITransactionData } from "../types/types";
+import { getApprovalData } from "../utils/utils";
 import BigNumber from "bignumber.js";
 import 'dotenv/config'
 
@@ -29,7 +29,7 @@ export const checkExecutionNotReverted = async (transactionData: ITransactionDat
         ).data
         let message = ""
         if(!response.simulation_results[transactionData.length - 1].transaction.status) {
-            if(response.simulation_results[transactionData.length - 1].transaction.error_info.address.localeCompare(transactionData[transactionData.length - 1].to)) { 
+            if(response.simulation_results[transactionData.length - 1].transaction.error_info.address.localeCompare(transactionData[transactionData.length - 1].to, 'en', { sensitivity: 'base' }) == 0) { 
                 message = "Increase slippage for swap"
             }
         }
