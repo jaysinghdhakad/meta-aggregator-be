@@ -58,7 +58,6 @@ export const getBarterQuote = async (amount: string, tokenIn: string, tokenOut: 
         })
         // return null if the status is not normal
         if (routeData.data.status != "Normal") return null
-        console.log("barter quote response", routeData.data)
         return routeData.data
     } catch (error) {
         console.log("barter quote error", error)

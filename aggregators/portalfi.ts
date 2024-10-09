@@ -47,7 +47,6 @@ export const getPortalfiQuote = async (chainId: number, amount: string, tokenIn:
         const response = await axios.get(`https://api.portals.fi/v2/portal/estimate?${params}`, {
             headers: { Authorization: `${process.env.PORTALFI_API_KEY}` }
         })
-        console.log("portalfi quote response", response.data)
         return response.data
     } catch (error) {
         console.log("portalfi quote error", error)
