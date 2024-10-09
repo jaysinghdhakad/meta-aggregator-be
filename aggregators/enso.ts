@@ -50,7 +50,7 @@ export const getEnsoQuote = async (chainID: number, amount: string, tokenIn: str
                 Authorization: process.env.ENSO_API_KEY
             }
         })
-
+        console.log("enso quote response", response.data)
         return response.data
     }
     catch (error) {

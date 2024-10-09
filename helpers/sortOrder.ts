@@ -45,9 +45,9 @@ export const sortOrder = async (chainID: number, slippage: number, amount: strin
   console.log("barterSimulationPassed", barterResult?.simulationPassed.status)
 
   const quotes = [];
-
+let priceImpactPercentage
 if (portalfiResult && portalfiResult.simulationPassed.status) {
-    const priceImpactPercentage = calculatePriceImpactPercentage(portalfiResult.quote.context.minOutputAmount, amount, tokenInPriceData.usdPrice, tokenOutPriceData.usdPrice, tokenInPriceData.tokenDecimals  , tokenOutPriceData.tokenDecimals)
+    if(tokenInPriceData != null && tokenOutPriceData != null ) priceImpactPercentage = calculatePriceImpactPercentage(portalfiResult.quote.context.minOutputAmount, amount, tokenInPriceData.usdPrice, tokenOutPriceData.usdPrice, tokenInPriceData.tokenDecimals  , tokenOutPriceData.tokenDecimals)
     quotes.push({
       protocol: "portalfi",
       to: portalfiResult.quote.tx.to,
@@ -58,13 +58,13 @@ if (portalfiResult && portalfiResult.simulationPassed.status) {
       minAmountOut: portalfiResult.quote.context.minOutputAmount,
       gasEstimate: portalfiResult.simulationPassed.gas,
       simulationStatus: portalfiResult.simulationPassed.status,
-      priceImpactPercentage: priceImpactPercentage
+      priceImpactPercentage: priceImpactPercentage || 0
     });
   }
 
   if (ensoResult && ensoResult.simulationPassed.status) {
     const minAmountOut = getMinAmountOut(ensoResult.quote.amountOut, slippage);
-    const priceImpactPercentage = calculatePriceImpactPercentage(minAmountOut, amount, tokenInPriceData.usdPrice, tokenOutPriceData.usdPrice, tokenInPriceData.tokenDecimals  , tokenOutPriceData.tokenDecimals)
+    if(tokenInPriceData != null && tokenOutPriceData != null ) priceImpactPercentage = calculatePriceImpactPercentage(minAmountOut, amount, tokenInPriceData.usdPrice, tokenOutPriceData.usdPrice, tokenInPriceData.tokenDecimals  , tokenOutPriceData.tokenDecimals)
     quotes.push({
       protocol: "enso",
       to: ensoResult.quote.tx.to,
@@ -75,13 +75,13 @@ if (portalfiResult && portalfiResult.simulationPassed.status) {
       minAmountOut: minAmountOut,
       gasEstimate: ensoResult.quote.gas,
       simulationStatus: ensoResult.simulationPassed.status,
-      priceImpactPercentage: priceImpactPercentage
+      priceImpactPercentage: priceImpactPercentage || 0
     });
   }
 
   if (barterResult && barterResult.simulationPassed.status) {
     const minAmountOut = getMinAmountOut(barterResult.quote.route.outputAmount, slippage);
-    const priceImpactPercentage = calculatePriceImpactPercentage(minAmountOut, amount, tokenInPriceData.usdPrice, tokenOutPriceData.usdPrice, tokenInPriceData.tokenDecimals  , tokenOutPriceData.tokenDecimals)
+    if(tokenInPriceData != null && tokenOutPriceData != null ) priceImpactPercentage = calculatePriceImpactPercentage(minAmountOut, amount, tokenInPriceData.usdPrice, tokenOutPriceData.usdPrice, tokenInPriceData.tokenDecimals  , tokenOutPriceData.tokenDecimals)
     quotes.push({
       protocol: "barter",
       to: barterResult.quote.to,
@@ -92,7 +92,7 @@ if (portalfiResult && portalfiResult.simulationPassed.status) {
       minAmountOut: minAmountOut,
       gasEstimate: barterResult.quote.route.gasEstimation,
       simulationStatus: barterResult.simulationPassed.status,
-      priceImpactPercentage: priceImpactPercentage
+      priceImpactPercentage: priceImpactPercentage || 0
     });
   }
 
@@ -110,7 +110,8 @@ if (portalfiResult && portalfiResult.simulationPassed.status) {
       minAmountOut: ensoResult.quote.context.minOutputAmount,
       gasEstimate: ensoResult.quote.gas,
       approvalAddress: ensoResult.quote.tx.to,
-      simulationStatus: ensoResult.simulationPassed.status
+      simulationStatus: ensoResult.simulationPassed.status,
+      priceImpactPercentage : 0
     })
   }
 
@@ -125,7 +126,8 @@ if (portalfiResult && portalfiResult.simulationPassed.status) {
       minAmountOut: barterResult.quote.route.outputAmount,
       gasEstimate: barterResult.quote.route.gasEstimation,
       approvalAddress: barterResult.quote.to,
-      simulationStatus: barterResult.simulationPassed.status
+      simulationStatus: barterResult.simulationPassed.status,
+      priceImpactPercentage : 0
     })
   }
 
@@ -140,7 +142,8 @@ if (portalfiResult && portalfiResult.simulationPassed.status) {
       minAmountOut: portalfiResult.quote.context.minOutputAmount,
       gasEstimate: portalfiResult.quote.gas,
       approvalAddress: portalfiResult.quote.tx.to,
-      simulationStatus: portalfiResult.simulationPassed.status
+      simulationStatus: portalfiResult.simulationPassed.status,
+      priceImpactPercentage : 0
     })
   }
 
