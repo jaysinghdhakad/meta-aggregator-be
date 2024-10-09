@@ -2,12 +2,12 @@ import { getPortalfiSwap } from "../aggregators/portalfi";
 import { getEnsoSwap } from "../aggregators/enso";
 import { getBarterAmountAndSwap } from "../aggregators/barter";
 import { generateSimulationData, checkExecutionNotReverted } from "../simulations/simulation";
-import { getMinAmountOut, fetchTokenPrice, calculatePriceImpactPercentage } from "../utils/utils";
+import { getMinAmountOut, fetchPriceFromPortals, calculatePriceImpactPercentage, getChainName } from "../utils/utils";
 export const sortOrder = async (chainID: number, slippage: number, amount: string, tokenIn: string, tokenOut: string, sender: string, receiver: string) => {
   const isEth = tokenIn.toLowerCase() === '0xeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee';
 
   // Get quotes and run simulations for all protocols
-  const [portalfiResult, ensoResult, barterResult, tokenInPriceData, tokenOutPriceData] = await Promise.all([
+  const [portalfiResult, ensoResult, barterResult, tokenPriceData] = await Promise.all([
     getPortalfiSwap(chainID, slippage, amount, tokenIn, tokenOut, sender, receiver, false)
       .then(async (portalfi) => {
         if (!portalfi) return null;
@@ -35,8 +35,7 @@ export const sortOrder = async (chainID: number, slippage: number, amount: strin
         const simulationPassed = await checkExecutionNotReverted(simulationData, chainID);
         return { quote: barter, simulationPassed };
       }),
-    fetchTokenPrice(tokenIn, chainID),
-    fetchTokenPrice(tokenOut, chainID)
+    fetchPriceFromPortals([tokenIn, tokenOut], getChainName(chainID) || 'base')
   ]);
 
 
@@ -45,9 +44,16 @@ export const sortOrder = async (chainID: number, slippage: number, amount: strin
   console.log("barterSimulationPassed", barterResult?.simulationPassed.status)
 
   const quotes = [];
-let priceImpactPercentage
-if (portalfiResult && portalfiResult.simulationPassed.status) {
-    if(tokenInPriceData != null && tokenOutPriceData != null ) priceImpactPercentage = calculatePriceImpactPercentage(portalfiResult.quote.context.minOutputAmount, amount, tokenInPriceData.usdPrice, tokenOutPriceData.usdPrice, tokenInPriceData.tokenDecimals  , tokenOutPriceData.tokenDecimals)
+  let priceImpactPercentage
+  if (portalfiResult && portalfiResult.simulationPassed.status) {
+    if (tokenPriceData != null && tokenPriceData.length == 2) {
+      const tokenInPriceData = tokenPriceData.find(token => token.address === tokenIn.toLowerCase());
+      const tokenOutPriceData = tokenPriceData.find(token => token.address === tokenOut.toLowerCase());
+      priceImpactPercentage = calculatePriceImpactPercentage(portalfiResult.quote.context.minOutputAmount, amount, tokenInPriceData?.price ?? 0,
+        tokenOutPriceData?.price ?? 0,
+        tokenInPriceData?.decimals ?? 18,
+        tokenOutPriceData?.decimals ?? 18)
+    }
     quotes.push({
       protocol: "portalfi",
       to: portalfiResult.quote.tx.to,
@@ -64,7 +70,14 @@ if (portalfiResult && portalfiResult.simulationPassed.status) {
 
   if (ensoResult && ensoResult.simulationPassed.status) {
     const minAmountOut = getMinAmountOut(ensoResult.quote.amountOut, slippage);
-    if(tokenInPriceData != null && tokenOutPriceData != null ) priceImpactPercentage = calculatePriceImpactPercentage(minAmountOut, amount, tokenInPriceData.usdPrice, tokenOutPriceData.usdPrice, tokenInPriceData.tokenDecimals  , tokenOutPriceData.tokenDecimals)
+    if (tokenPriceData != null && tokenPriceData.length == 2) {
+      const tokenInPriceData = tokenPriceData.find(token => token.address === tokenIn.toLowerCase());
+      const tokenOutPriceData = tokenPriceData.find(token => token.address === tokenOut.toLowerCase());
+      priceImpactPercentage = calculatePriceImpactPercentage(minAmountOut, amount, tokenInPriceData?.price ?? 0,
+        tokenOutPriceData?.price ?? 0,
+        tokenInPriceData?.decimals ?? 18,
+        tokenOutPriceData?.decimals ?? 18)
+    }
     quotes.push({
       protocol: "enso",
       to: ensoResult.quote.tx.to,
@@ -81,7 +94,14 @@ if (portalfiResult && portalfiResult.simulationPassed.status) {
 
   if (barterResult && barterResult.simulationPassed.status) {
     const minAmountOut = getMinAmountOut(barterResult.quote.route.outputAmount, slippage);
-    if(tokenInPriceData != null && tokenOutPriceData != null ) priceImpactPercentage = calculatePriceImpactPercentage(minAmountOut, amount, tokenInPriceData.usdPrice, tokenOutPriceData.usdPrice, tokenInPriceData.tokenDecimals  , tokenOutPriceData.tokenDecimals)
+    if (tokenPriceData != null && tokenPriceData.length == 2) {
+      const tokenInPriceData = tokenPriceData.find(token => token.address === tokenIn.toLowerCase());
+      const tokenOutPriceData = tokenPriceData.find(token => token.address === tokenOut.toLowerCase());
+      priceImpactPercentage = calculatePriceImpactPercentage(minAmountOut, amount, tokenInPriceData?.price ?? 0,
+        tokenOutPriceData?.price ?? 0,
+        tokenInPriceData?.decimals ?? 18,
+        tokenOutPriceData?.decimals ?? 18)
+    }
     quotes.push({
       protocol: "barter",
       to: barterResult.quote.to,
@@ -99,7 +119,7 @@ if (portalfiResult && portalfiResult.simulationPassed.status) {
   // Sort quotes in descending order based on amountOut
   quotes.sort((a, b) => b.amountOut - a.amountOut);
   // add the quotes that failed simulation with message "Increase slippage for swap"
-  if(ensoResult && !ensoResult.simulationPassed.status && ensoResult.simulationPassed.message == "Increase slippage for swap") { 
+  if (ensoResult && !ensoResult.simulationPassed.status && ensoResult.simulationPassed.message == "Increase slippage for swap") {
     quotes.push({
       protocol: "enso",
       message: "Increase slippage for swap",
@@ -111,11 +131,11 @@ if (portalfiResult && portalfiResult.simulationPassed.status) {
       gasEstimate: ensoResult.quote.gas,
       approvalAddress: ensoResult.quote.tx.to,
       simulationStatus: ensoResult.simulationPassed.status,
-      priceImpactPercentage : 0
+      priceImpactPercentage: 0
     })
   }
 
-  if(barterResult && !barterResult.simulationPassed.status && barterResult.simulationPassed.message == "Increase slippage for swap") { 
+  if (barterResult && !barterResult.simulationPassed.status && barterResult.simulationPassed.message == "Increase slippage for swap") {
     quotes.push({
       protocol: "barter",
       message: "Increase slippage for swap",
@@ -127,11 +147,11 @@ if (portalfiResult && portalfiResult.simulationPassed.status) {
       gasEstimate: barterResult.quote.route.gasEstimation,
       approvalAddress: barterResult.quote.to,
       simulationStatus: barterResult.simulationPassed.status,
-      priceImpactPercentage : 0
+      priceImpactPercentage: 0
     })
   }
 
-  if(portalfiResult && !portalfiResult.simulationPassed.status && portalfiResult.simulationPassed.message == "Increase slippage for swap") { 
+  if (portalfiResult && !portalfiResult.simulationPassed.status && portalfiResult.simulationPassed.message == "Increase slippage for swap") {
     quotes.push({
       protocol: "portalfi",
       message: "Increase slippage for swap",
@@ -143,7 +163,7 @@ if (portalfiResult && portalfiResult.simulationPassed.status) {
       gasEstimate: portalfiResult.quote.gas,
       approvalAddress: portalfiResult.quote.tx.to,
       simulationStatus: portalfiResult.simulationPassed.status,
-      priceImpactPercentage : 0
+      priceImpactPercentage: 0
     })
   }
 
