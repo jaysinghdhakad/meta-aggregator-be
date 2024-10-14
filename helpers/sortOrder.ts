@@ -4,6 +4,13 @@ import { getBarterAmountAndSwap } from "../aggregators/barter";
 import { generateSimulationData, checkExecutionNotReverted } from "../simulations/simulation";
 import { getMinAmountOut, fetchPriceFromPortals, calculatePriceImpactPercentage, getChainName } from "../utils/utils";
 export const sortOrder = async (chainID: number, slippage: number, amount: string, tokenIn: string, tokenOut: string, sender: string, receiver: string) => {
+  console.log("tokenIn", tokenIn)
+  console.log("tokenOut", tokenOut)
+  console.log("sender", sender)
+  console.log("receiver", receiver) 
+  console.log("chainID", chainID)
+  console.log("slippage", slippage)
+  console.log("amount", amount)
   const isEth = tokenIn.toLowerCase() === '0xeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee';
 
   // Get quotes and run simulations for all protocols
@@ -47,6 +54,7 @@ export const sortOrder = async (chainID: number, slippage: number, amount: strin
   let priceImpactPercentage
   if (portalfiResult && portalfiResult.simulationPassed.status) {
     if (tokenPriceData != null && tokenPriceData.length == 2) {
+      console.log("tokenPriceData", tokenPriceData)
       const tokenInPriceData = tokenPriceData.find(token => token.address === tokenIn.toLowerCase());
       const tokenOutPriceData = tokenPriceData.find(token => token.address === tokenOut.toLowerCase());
       priceImpactPercentage = calculatePriceImpactPercentage(portalfiResult.quote.context.outputAmount, amount, tokenInPriceData?.price ?? 0,
