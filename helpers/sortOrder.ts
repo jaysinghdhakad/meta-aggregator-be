@@ -70,6 +70,19 @@ export const sortOrder = async (chainID: number, slippage: number, amount: strin
 
   if (ensoResult && ensoResult.simulationPassed.status) {
     const minAmountOut = getMinAmountOut(ensoResult.quote.amountOut, slippage);
+    let priceImpactPercentage;
+    if(ensoResult.quote.priceImpact == null) {
+      if (tokenPriceData != null && tokenPriceData.length == 2) {
+        const tokenInPriceData = tokenPriceData.find(token => token.address === tokenIn.toLowerCase());
+        const tokenOutPriceData = tokenPriceData.find(token => token.address === tokenOut.toLowerCase());
+        priceImpactPercentage = calculatePriceImpactPercentage(ensoResult.quote.amountOut, amount, tokenInPriceData?.price ?? 0,
+          tokenOutPriceData?.price ?? 0,
+          tokenInPriceData?.decimals ?? 18,
+          tokenOutPriceData?.decimals ?? 18)
+      }
+    } else {
+      priceImpactPercentage = ensoResult.quote.priceImpact / 100
+    }
     quotes.push({
       protocol: "enso",
       to: ensoResult.quote.tx.to,
@@ -80,7 +93,7 @@ export const sortOrder = async (chainID: number, slippage: number, amount: strin
       minAmountOut: minAmountOut,
       gasEstimate: ensoResult.quote.gas,
       simulationStatus: ensoResult.simulationPassed.status,
-      priceImpactPercentage: ensoResult.quote.priceImpact / 100
+      priceImpactPercentage: priceImpactPercentage || 0
     });
   }
 
