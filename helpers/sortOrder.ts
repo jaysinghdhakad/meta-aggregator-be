@@ -57,6 +57,8 @@ export const sortOrder = async (chainID: number, slippage: number, amount: strin
       console.log("tokenPriceData", tokenPriceData)
       const tokenInPriceData = tokenPriceData.find(token => token.address === tokenIn.toLowerCase());
       const tokenOutPriceData = tokenPriceData.find(token => token.address === tokenOut.toLowerCase());
+      console.log("tokenInPriceData", tokenInPriceData)
+      console.log("tokenOutPriceData", tokenOutPriceData)
       priceImpactPercentage = calculatePriceImpactPercentage(portalfiResult.quote.context.outputAmount, amount, tokenInPriceData?.price ?? 0,
         tokenOutPriceData?.price ?? 0,
         tokenInPriceData?.decimals ?? 18,
