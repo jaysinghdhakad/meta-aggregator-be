@@ -178,6 +178,12 @@ export const fetchPriceFromPortals = async (tokens: string[], chain: 'base' | 'b
 };
 
 export function calculatePriceImpactPercentage(amountOut: string, amountIn: string, tokenInPrice: number, tokenOutPrice: number, tokenInDecimals: number, tokenOutDecimals: number) {
+    console.log("amountOut", amountOut)
+    console.log("amountIn", amountIn)
+    console.log("tokenInPrice", tokenInPrice)
+    console.log("tokenOutPrice", tokenOutPrice)
+    console.log("tokenInDecimals", tokenInDecimals)
+    console.log("tokenOutDecimals", tokenOutDecimals)
     const amountOutBN = BigNumber(amountOut).div(BigNumber(10).pow(tokenOutDecimals))
     const amountInBN = BigNumber(amountIn).div(BigNumber(10).pow(tokenInDecimals))
     const tokenInPriceBN = BigNumber(tokenInPrice)
