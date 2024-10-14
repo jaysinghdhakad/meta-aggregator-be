@@ -83,8 +83,8 @@ export const sortOrder = async (chainID: number, slippage: number, amount: strin
     let priceImpactPercentage;
     if(ensoResult.quote.priceImpact == null) {
       if (tokenPriceData != null && tokenPriceData.length == 2) {
-        const tokenInPriceData = tokenPriceData.find(token => token.address === tokenIn.toLowerCase());
-        const tokenOutPriceData = tokenPriceData.find(token => token.address === tokenOut.toLowerCase());
+        const tokenInPriceData = tokenPriceData.find(token => token.address.toLowerCase() === tokenIn.toLowerCase());
+        const tokenOutPriceData = tokenPriceData.find(token => token.address.toLowerCase() === tokenOut.toLowerCase());
         priceImpactPercentage = calculatePriceImpactPercentage(ensoResult.quote.amountOut, amount, tokenInPriceData?.price ?? 0,
           tokenOutPriceData?.price ?? 0,
           tokenInPriceData?.decimals ?? 18,
@@ -110,8 +110,8 @@ export const sortOrder = async (chainID: number, slippage: number, amount: strin
   if (barterResult && barterResult.simulationPassed.status) {
     const minAmountOut = getMinAmountOut(barterResult.quote.route.outputAmount, slippage);
     if (tokenPriceData != null && tokenPriceData.length == 2) {
-      const tokenInPriceData = tokenPriceData.find(token => token.address === tokenIn.toLowerCase());
-      const tokenOutPriceData = tokenPriceData.find(token => token.address === tokenOut.toLowerCase());
+      const tokenInPriceData = tokenPriceData.find(token => token.address.toLowerCase() === tokenIn.toLowerCase());
+      const tokenOutPriceData = tokenPriceData.find(token => token.address.toLowerCase() === tokenOut.toLowerCase());
       priceImpactPercentage = calculatePriceImpactPercentage(barterResult.quote.route.outputAmount, amount, tokenInPriceData?.price ?? 0,
         tokenOutPriceData?.price ?? 0,
         tokenInPriceData?.decimals ?? 18,
