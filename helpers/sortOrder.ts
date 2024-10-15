@@ -1,20 +1,13 @@
-import { getPortalfiSwap } from "../aggregators/portalfi";
+import { getPortalfiSwap , getPortalfiQuote} from "../aggregators/portalfi";
 import { getEnsoSwap } from "../aggregators/enso";
 import { getBarterAmountAndSwap } from "../aggregators/barter";
 import { generateSimulationData, checkExecutionNotReverted } from "../simulations/simulation";
 import { getMinAmountOut, fetchPriceFromPortals, calculatePriceImpactPercentage, getChainName } from "../utils/utils";
 export const sortOrder = async (chainID: number, slippage: number, amount: string, tokenIn: string, tokenOut: string, sender: string, receiver: string) => {
-  console.log("tokenIn", tokenIn)
-  console.log("tokenOut", tokenOut)
-  console.log("sender", sender)
-  console.log("receiver", receiver) 
-  console.log("chainID", chainID)
-  console.log("slippage", slippage)
-  console.log("amount", amount)
   const isEth = tokenIn.toLowerCase() === '0xeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee';
 
   // Get quotes and run simulations for all protocols
-  const [portalfiResult, ensoResult, barterResult, tokenPriceData] = await Promise.all([
+  const [portalfiResult, ensoResult, barterResult, tokenPriceData, portalfiQuote] = await Promise.all([
     getPortalfiSwap(chainID, slippage, amount, tokenIn, tokenOut, sender, receiver, false)
       .then(async (portalfi) => {
         if (!portalfi) return null;
@@ -42,8 +35,10 @@ export const sortOrder = async (chainID: number, slippage: number, amount: strin
         const simulationPassed = await checkExecutionNotReverted(simulationData, chainID);
         return { quote: barter, simulationPassed };
       }),
-    fetchPriceFromPortals([tokenIn, tokenOut], getChainName(chainID) || 'base')
+    fetchPriceFromPortals([tokenIn, tokenOut], getChainName(chainID) || 'base'),
+    getPortalfiQuote(chainID, amount, tokenIn, tokenOut, sender, receiver)
   ]);
+
 
 
   console.log("portalsSimulationPassed", portalfiResult?.simulationPassed.status)
@@ -54,12 +49,9 @@ export const sortOrder = async (chainID: number, slippage: number, amount: strin
   let priceImpactPercentage
   if (portalfiResult && portalfiResult.simulationPassed.status) {
     if (tokenPriceData != null && tokenPriceData.length == 2) {
-      console.log("tokenPriceData", tokenPriceData)
       const tokenInPriceData = tokenPriceData.find(token => token.address === tokenIn.toLowerCase());
       const tokenOutPriceData = tokenPriceData.find(token => token.address === tokenOut.toLowerCase());
-      console.log("tokenInPriceData", tokenInPriceData)
-      console.log("tokenOutPriceData", tokenOutPriceData)
-      priceImpactPercentage = calculatePriceImpactPercentage(portalfiResult.quote.context.outputAmount, amount, tokenInPriceData?.price ?? 0,
+      priceImpactPercentage = calculatePriceImpactPercentage(portalfiQuote.outputAmount, amount, tokenInPriceData?.price ?? 0,
         tokenOutPriceData?.price ?? 0,
         tokenInPriceData?.decimals ?? 18,
         tokenOutPriceData?.decimals ?? 18)
@@ -69,7 +61,7 @@ export const sortOrder = async (chainID: number, slippage: number, amount: strin
       to: portalfiResult.quote.tx.to,
       data: portalfiResult.quote.tx.data,
       value: portalfiResult.quote.tx.value,
-      amountOut: portalfiResult.quote.context.outputAmount,
+      amountOut: portalfiQuote.outputAmount,
       approvalAddress: portalfiResult.quote.tx.to,
       minAmountOut: portalfiResult.quote.context.minOutputAmount,
       gasEstimate: portalfiResult.simulationPassed.gas,
