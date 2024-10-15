@@ -1,6 +1,6 @@
 import BigNumber from "bignumber.js";
 import { baseChainID } from "./config";
-import { ERC20ABI } from "./ERC20.abi.ts";
+import { ERC20ABI } from "./ERC20.abi";
 import { ethers } from "ethers";
 import axios from "axios";
 import { TokenObj } from "../types/types";
