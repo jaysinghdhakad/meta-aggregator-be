@@ -4,7 +4,7 @@ import { getApprovalData } from "../utils/utils";
 import BigNumber from "bignumber.js";
 import 'dotenv/config'
 
-export const checkExecutionNotReverted = async (transactionData: ITransactionData[], chainId: number) : Promise<{status: boolean, gas: number, message: string}> => {
+export const checkExecutionNotReverted = async (transactionData: ITransactionData[], chainId: number) : Promise<{status: boolean, gas: number}> => {
     try {
         const response = (
             await axios.post(
@@ -27,17 +27,11 @@ export const checkExecutionNotReverted = async (transactionData: ITransactionDat
                 }
             )
         ).data
-        let message = ""
-        if(!response.simulation_results[transactionData.length - 1].transaction.status) {
-            if(response.simulation_results[transactionData.length - 1].transaction.error_info.address.localeCompare(transactionData[transactionData.length - 1].to, 'en', { sensitivity: 'base' }) == 0) { 
-                message = "Increase slippage for swap"
-            }
-        }
         const status = response.simulation_results[transactionData.length - 1].transaction.status
         const gas = response.simulation_results[transactionData.length - 1].transaction.gas
-        return { status: status, gas: gas, message: message }
+        return { status: status, gas: gas }
     } catch (err) {
-        return { status: false, gas: 0, message: "" }
+        return { status: false, gas: 0 }
     }
 }
 

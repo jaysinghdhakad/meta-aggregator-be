@@ -113,7 +113,7 @@ app.post('/best-quotes', validateRequest(['slippage', 'amount', 'tokenIn', 'toke
   let { slippage, amount, tokenIn, tokenOut, sender, receiver, chainId } = req.body;
   // sort the quotes by amount out and return the quotes in descending order of amount out
   const swapData = await sortOrder(chainId, slippage, amount, tokenIn, tokenOut, sender, receiver)
-  if (swapData.length == 0) return res.status(404).send({ message: "No quotes found" });
+  if (swapData.quotes.length == 0) return res.status(404).send({ message: "No quotes found" });
   res.send(swapData);
 });
 

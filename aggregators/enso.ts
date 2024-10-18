@@ -25,7 +25,6 @@ export const getEnsoSwap = async (chainID: number, slippage: number, amount: str
                 Authorization: process.env.ENSO_API_KEY
             }
         })
-        console.log("enso swap response", response.data)
         return response.data
     } catch (error) {
         console.log("enso swap error", error)

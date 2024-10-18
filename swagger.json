@@ -13,7 +13,7 @@
     "paths": {
         "/best-quotes": {
             "post": {
-                "summary": "This is for the best quotes with swap data. This endpoint queries all protocols and returns the best quotes with swap data in descending order of amount out.",
+                "summary": "This is for the best quotes with swap data. This endpoint queries all protocols and returns the best quotes with swap data in descending order of amount out. Also gives the approval address for tokens swap",
                 "requestBody": {
                     "required": true,
                     "content": {
@@ -62,37 +62,45 @@
                         "content": {
                             "application/json": {
                                 "schema": {
-                                    "type": "array",
-                                    "items": {
-                                        "type": "object",
-                                        "properties": {
-                                            "protocol": {
-                                                "type": "string"
-                                            },
-                                            "amountOut": {
-                                                "type": "string"
-                                            },
-                                            "to": {
-                                                "type": "string"
-                                            },
-                                            "data": {
-                                                "type": "string"
-                                            },
-                                            "value": {
-                                                "type": "string"
-                                            },
-                                            "minAmountOut": {
-                                                "type": "string"
-                                            },
-                                            "gasEstimate": {
-                                                "type": "number"
-                                            },
-                                            "approvalAddress": {
-                                                "type": "string"
-                                            },
-                                            "priceImpactPercentage": {
-                                                "type": "number"
+                                    "type": "object",
+                                    "properties": {
+                                        "quotes": {
+                                            "type": "array",
+                                            "items": {
+                                                "type": "object",
+                                                "properties": {
+                                                    "protocol": {
+                                                        "type": "string"
+                                                    },
+                                                    "amountOut": {
+                                                        "type": "string"
+                                                    },
+                                                    "to": {
+                                                        "type": "string"
+                                                    },
+                                                    "data": {
+                                                        "type": "string"
+                                                    },
+                                                    "value": {
+                                                        "type": "string"
+                                                    },
+                                                    "minAmountOut": {
+                                                        "type": "string"
+                                                    },
+                                                    "gasEstimate": {
+                                                        "type": "number"
+                                                    },
+                                                    "approvalAddress": {
+                                                        "type": "string"
+                                                    },
+                                                    "priceImpactPercentage": {
+                                                        "type": "number"
+                                                    }
+                                                }
                                             }
+                                        },
+                                        "approvalAddress": {
+                                            "type": "string"
                                         }
                                     }
                                 }

@@ -1,6 +1,7 @@
 import BigNumber from "bignumber.js";
 import { baseChainID } from "./config";
 import { ERC20ABI } from "./ERC20.abi";
+import { SWAPCONTRACTABI } from "./SWAPCONTRACT.abi";
 import { ethers } from "ethers";
 import axios from "axios";
 import { TokenObj } from "../types/types";
@@ -26,6 +27,12 @@ export function getApprovalAddressForChain(protocol: string, chainId: number) {
             return process.env.BARTER_APPROVAL_ADDRESS_BASE
         }
 
+    }
+}
+
+export function getSwapContract(chainId:number) {
+    if(chainId === baseChainID) {
+        return process.env.SWAP_CONTRACT_BASE
     }
 }
 
@@ -60,6 +67,25 @@ export function getApprovalData(chainId: number, amount: string, tokenAddress: s
         return null
     }
 }
+
+export function generateSwapData(tokenIn: string , tokenOut: string, aggregator: string , swapData: string , amountIn: string, minAmountOut: string, receiver: string ,isEnso:boolean, chainId: number) {
+    console.log("simulation _______________________________________________")
+    console.log({tokenIn , tokenOut, aggregator , swapData , amountIn, minAmountOut, receiver , chainId})
+    try {
+        if (chainId === baseChainID) {
+            const provider = getProvider(chainId)
+            const swapContract = getSwapContract(chainId) || "0x6AE14dFc12C6C3bf08E440f4933dd9b5a9295E00";
+            const tokenContract = new ethers.Contract(swapContract, SWAPCONTRACTABI, provider)
+            const calldata = tokenContract.interface.encodeFunctionData('swap', [tokenIn,tokenOut, aggregator, swapData, ethers.toBigInt(amountIn), ethers.toBigInt(minAmountOut), receiver, isEnso])
+            return calldata
+        }
+    }
+    catch (error) {
+        console.log("error", error)
+        return null
+    }
+}
+
 
 
 export async function fetchTokenPrice(tokenAddress: string, chainId: number) {
@@ -187,4 +213,5 @@ export function calculatePriceImpactPercentage(amountOut: string, amountIn: stri
     const priceImpactPercentage = BigNumber(1).minus(amountOutUSDInAmountIn).times(100).toFixed(2)
     return priceImpactPercentage
 }
+
 
