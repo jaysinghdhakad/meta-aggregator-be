@@ -48,7 +48,6 @@ export const sortOrder = async (chainID: number, slippage: number, amount: strin
         const simulationData = await generateSimulationData(
           chainID, amount, tokenIn, sender, swapContract, swapData, isEth
         );
-        console.log("barter simulation data", simulationData)
         const simulationPassed = await checkExecutionNotReverted(simulationData, chainID);
         return { quote: barter, simulationPassed, swapData: swapData  };
       }),
@@ -65,7 +64,6 @@ export const sortOrder = async (chainID: number, slippage: number, amount: strin
   const quotes = [];
   let priceImpactPercentage
   if (portalfiResult && portalfiResult.simulationPassed.status) {
-    console.log("here in the portalfi")
     if (tokenPriceData != null && tokenPriceData.length == 2) {
       const tokenInPriceData = tokenPriceData.find(token => token.address === tokenIn.toLowerCase());
       const tokenOutPriceData = tokenPriceData.find(token => token.address === tokenOut.toLowerCase());
@@ -88,7 +86,6 @@ export const sortOrder = async (chainID: number, slippage: number, amount: strin
   }
 
   if (ensoResult && ensoResult.simulationPassed.status) {
-    console.log("here in the enso")
     const minAmountOut = getMinAmountOut(ensoResult.quote.amountOut, slippage);
     let priceImpactPercentage;
     if (ensoResult.quote.priceImpact == null) {
@@ -110,14 +107,13 @@ export const sortOrder = async (chainID: number, slippage: number, amount: strin
       value: ensoResult.quote.tx.value,
       amountOut: ensoResult.quote.amountOut,
       minAmountOut: minAmountOut,
-      gasEstimate: ensoResult.quote.gas,
+      gasEstimate: ensoResult.simulationPassed.gas,
       simulationStatus: ensoResult.simulationPassed.status,
       priceImpactPercentage: priceImpactPercentage || 0
     });
   }
 
   if (barterResult && barterResult.simulationPassed.status) {
-    console.log("here in the barter")
     const minAmountOut = getMinAmountOut(barterResult.quote.route.outputAmount, slippage);
     if (tokenPriceData != null && tokenPriceData.length == 2) {
       const tokenInPriceData = tokenPriceData.find(token => token.address.toLowerCase() === tokenIn.toLowerCase());
@@ -134,7 +130,7 @@ export const sortOrder = async (chainID: number, slippage: number, amount: strin
       value: barterResult.quote.value,
       amountOut: barterResult.quote.route.outputAmount,
       minAmountOut: minAmountOut,
-      gasEstimate: barterResult.quote.route.gasEstimation,
+      gasEstimate: barterResult.simulationPassed.gas,
       simulationStatus: barterResult.simulationPassed.status,
       priceImpactPercentage: priceImpactPercentage || 0
     });

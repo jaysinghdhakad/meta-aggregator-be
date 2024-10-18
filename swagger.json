@@ -90,9 +90,6 @@
                                                     "gasEstimate": {
                                                         "type": "number"
                                                     },
-                                                    "approvalAddress": {
-                                                        "type": "string"
-                                                    },
                                                     "priceImpactPercentage": {
                                                         "type": "number"
                                                     }

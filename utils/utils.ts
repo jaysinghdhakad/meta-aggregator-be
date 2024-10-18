@@ -69,8 +69,6 @@ export function getApprovalData(chainId: number, amount: string, tokenAddress: s
 }
 
 export function generateSwapData(tokenIn: string , tokenOut: string, aggregator: string , swapData: string , amountIn: string, minAmountOut: string, receiver: string ,isEnso:boolean, chainId: number) {
-    console.log("simulation _______________________________________________")
-    console.log({tokenIn , tokenOut, aggregator , swapData , amountIn, minAmountOut, receiver , chainId})
     try {
         if (chainId === baseChainID) {
             const provider = getProvider(chainId)
