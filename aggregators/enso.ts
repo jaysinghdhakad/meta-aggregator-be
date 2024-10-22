@@ -19,6 +19,7 @@ export const getEnsoSwap = async (chainID: number, slippage: number, amount: str
 
     try {
         const response = await axios.get(`https://api.enso.finance/api/v1/shortcuts/route?${params}`, {
+            timeout : 6000,
             headers: {
                 accept: "application/json",
                 content: "application/json",

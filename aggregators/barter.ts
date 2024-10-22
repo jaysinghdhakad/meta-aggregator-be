@@ -24,6 +24,7 @@ export const getBarterSwap = async (slippage: number, amount: string, tokenIn: s
         }
 
         const swapResponse = await axios.post("https://velvet.base.barterswap.xyz/swap", swapRequestPayload, {
+            timeout: 4500,
             headers: {
                 "Authorization": process.env.BARTER_API_KEY,
 
@@ -52,6 +53,7 @@ export const getBarterQuote = async (amount: string, tokenIn: string, tokenOut: 
         }
 
         const routeData = await axios.post("https://velvet.base.barterswap.xyz/getSwapRoute", routeRequestPayload, {
+            timeout: 1500,
             headers: {
                 "Authorization": process.env.BARTER_API_KEY,
             }
