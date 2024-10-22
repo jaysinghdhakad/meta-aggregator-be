@@ -1,6 +1,7 @@
 import { getPortalfiSwap, getPortalfiQuote } from "../aggregators/portalfi";
 import { getEnsoSwap } from "../aggregators/enso";
 import { getBarterAmountAndSwap } from "../aggregators/barter";
+import { getZeroExV2SwapData } from "../aggregators/zerox"
 import { generateSimulationData, checkExecutionNotReverted } from "../simulations/simulation";
 import { getMinAmountOut, fetchPriceFromPortals, calculatePriceImpactPercentage, getChainName, getSwapContract, generateSwapData } from "../utils/utils";
 export const sortOrder = async (chainID: number, slippage: number, amount: string, tokenIn: string, tokenOut: string, sender: string, receiver: string) => {
@@ -8,7 +9,7 @@ export const sortOrder = async (chainID: number, slippage: number, amount: strin
   const swapContract = getSwapContract(chainID) || ""
 
   // Get quotes and run simulations for all protocols
-  const [portalfiResult, ensoResult, barterResult, tokenPriceData, portalfiQuote] = await Promise.all([
+  const [portalfiResult, ensoResult, barterResult, zeroXResults, tokenPriceData, portalfiQuote] = await Promise.all([
     getPortalfiSwap(chainID, slippage, amount, tokenIn, tokenOut, swapContract, swapContract, false)
       .then(async (portalfi) => {
         if (!portalfi) return null;
@@ -49,7 +50,21 @@ export const sortOrder = async (chainID: number, slippage: number, amount: strin
           chainID, amount, tokenIn, sender, swapContract, swapData, isEth
         );
         const simulationPassed = await checkExecutionNotReverted(simulationData, chainID);
-        return { quote: barter, simulationPassed, swapData: swapData  };
+        return { quote: barter, simulationPassed, swapData: swapData };
+      }),
+    getZeroExV2SwapData(tokenIn, tokenOut, amount, chainID, swapContract, slippage)
+      .then(async (zerox) => {
+        if (!zerox) return null;
+
+        const to = zerox.transaction.to;
+        const data = zerox.transaction.data;
+        const minAmountOut = zerox.minBuyAmount;
+        const swapData = generateSwapData(tokenIn, tokenOut, to, data, amount, minAmountOut, receiver, false, chainID) || "";
+        const simulationData = await generateSimulationData(
+          chainID, amount, tokenIn, sender, swapContract, swapData, isEth
+        );
+        const simulationPassed = await checkExecutionNotReverted(simulationData, chainID);
+        return { quote: zerox, simulationPassed, swapData: swapData }
       }),
     fetchPriceFromPortals([tokenIn, tokenOut], getChainName(chainID) || 'base'),
     getPortalfiQuote(chainID, amount, tokenIn, tokenOut, sender, receiver)
@@ -60,9 +75,34 @@ export const sortOrder = async (chainID: number, slippage: number, amount: strin
   console.log("portalsSimulationPassed", portalfiResult?.simulationPassed.status)
   console.log("ensoSimulationPassed", ensoResult?.simulationPassed.status)
   console.log("barterSimulationPassed", barterResult?.simulationPassed.status)
+  console.log("zeroXSimulationPassed", zeroXResults?.simulationPassed.status)
 
   const quotes = [];
   let priceImpactPercentage
+
+  if (zeroXResults && ensoResult?.simulationPassed.status) {
+    if (tokenPriceData != null && tokenPriceData.length == 2) {
+      const tokenInPriceData = tokenPriceData.find(token => token.address === tokenIn.toLowerCase());
+      const tokenOutPriceData = tokenPriceData.find(token => token.address === tokenOut.toLowerCase());
+      priceImpactPercentage = calculatePriceImpactPercentage(zeroXResults.quote.buyAmount, amount, tokenInPriceData?.price ?? 0,
+        tokenOutPriceData?.price ?? 0,
+        tokenInPriceData?.decimals ?? 18,
+        tokenOutPriceData?.decimals ?? 18)
+    }
+    quotes.push({
+      protocol: "zeroX",
+      to: swapContract,
+      data: zeroXResults.swapData,
+      value: zeroXResults.quote.transaction.value,
+      amountOut: zeroXResults.quote.buyAmount,
+      minAmountOut: zeroXResults.quote.minBuyAmount,
+      gasEstimate: zeroXResults.simulationPassed.gas,
+      simulationStatus: zeroXResults.simulationPassed.status,
+      priceImpactPercentage: priceImpactPercentage || 0
+    })
+  }
+
+
   if (portalfiResult && portalfiResult.simulationPassed.status) {
     if (tokenPriceData != null && tokenPriceData.length == 2) {
       const tokenInPriceData = tokenPriceData.find(token => token.address === tokenIn.toLowerCase());
@@ -139,5 +179,5 @@ export const sortOrder = async (chainID: number, slippage: number, amount: strin
   // Sort quotes in descending order based on amountOut
   quotes.sort((a, b) => b.amountOut - a.amountOut);
 
-  return {quotes : quotes, approvalAddress: swapContract}
+  return { quotes: quotes, approvalAddress: swapContract }
 }
