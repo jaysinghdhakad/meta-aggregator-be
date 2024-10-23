@@ -16,7 +16,7 @@ export const getPortalfiSwap = async (chainId: number, slippage: number, amount:
         inputAmount: amount,
         slippageTolerancePercentage: slippage,
         validate: getGasEstimate,
-        // feePercentage: process.env.PORTALFI_FEE,
+        feePercentage: 0,
         // partner: process.env.FEE_RECEIVER
     })
 
