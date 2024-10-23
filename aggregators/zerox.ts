@@ -17,6 +17,8 @@ export const getZeroExV2SwapData = async (
             sellAmount: amount,
             taker: taker,
             slippage: slippage * 100,
+            // swapFeeBps: process.env.ZEROX_FEE,
+            // swapFeeRecipient: process.env.FEE_RECEIVER
         }
 
         const response = await axios.get(`https://api.0x.org/swap/allowance-holder/quote?${qs.stringify(params)}`, {

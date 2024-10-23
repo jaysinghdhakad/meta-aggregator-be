@@ -13,8 +13,8 @@ export const getEnsoSwap = async (chainID: number, slippage: number, amount: str
         tokenOut: [tokenOut],
         slippage: (slippage * 100).toString(),
         receiver: receiver,
-        fee: process.env.ENSO_FEE,
-        feeReceiver: process.env.FEE_RECEIVER
+        // fee: process.env.ENSO_FEE,
+        // feeReceiver: process.env.FEE_RECEIVER
     })
 
     try {
