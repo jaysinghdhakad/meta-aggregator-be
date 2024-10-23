@@ -10,7 +10,7 @@ export const sortOrder = async (chainID: number, slippage: number, amount: strin
   const swapContract = getSwapContract(chainID) || ""
 
   // Get quotes and run simulations for all protocols
-  const [portalfiResult, ensoResult, barterResult, zeroXResults,/*oneInchResults,*/tokenPriceData, portalfiQuote] = await Promise.all([
+  const [portalfiResult, ensoResult, barterResult, zeroXResults,oneInchResults,tokenPriceData, portalfiQuote] = await Promise.all([
     getPortalfiSwap(chainID, slippage, amount, tokenIn, tokenOut, swapContract, swapContract, false)
       .then(async (portalfi) => {
         if (!portalfi) return null;
@@ -67,21 +67,21 @@ export const sortOrder = async (chainID: number, slippage: number, amount: strin
         const simulationPassed = await checkExecutionNotReverted(simulationData, chainID);
         return { quote: zerox, simulationPassed, swapData: swapData }
       }),
-    // getOneInchSwapData(tokenIn, tokenOut, amount, chainID, swapContract, slippage)
-    //   .then(async (oneInch) => {
-    //     console.log("oneInch", oneInch)
-    //     if (!oneInch) return null;
+    getOneInchSwapData(tokenIn, tokenOut, amount, chainID, swapContract, slippage)
+      .then(async (oneInch) => {
+        console.log("oneInch", oneInch)
+        if (!oneInch) return null;
 
-    //     const to = oneInch.tx.to
-    //     const data = oneInch.tx.data
-    //     const minAmountOut = getMinAmountOut(oneInch.dstAmount, slippage);
-    //     const swapData = generateSwapData(tokenIn, tokenOut, to, data, amount, minAmountOut, receiver, false, chainID) || "";
-    //     const simulationData = await generateSimulationData(
-    //       chainID, amount, tokenIn, sender, swapContract, swapData, isEth
-    //     );
-    //     const simulationPassed = await checkExecutionNotReverted(simulationData, chainID);
-    //     return { quote: oneInch, simulationPassed, swapData: swapData }
-    //   }),
+        const to = oneInch.tx.to
+        const data = oneInch.tx.data
+        const minAmountOut = getMinAmountOut(oneInch.dstAmount, slippage);
+        const swapData = generateSwapData(tokenIn, tokenOut, to, data, amount, minAmountOut, receiver, false, chainID) || "";
+        const simulationData = await generateSimulationData(
+          chainID, amount, tokenIn, sender, swapContract, swapData, isEth
+        );
+        const simulationPassed = await checkExecutionNotReverted(simulationData, chainID);
+        return { quote: oneInch, simulationPassed, swapData: swapData }
+      }),
     fetchPriceFromPortals([tokenIn, tokenOut], getChainName(chainID) || 'base'),
     getPortalfiQuote(chainID, amount, tokenIn, tokenOut, sender, receiver)
   ]);
@@ -92,35 +92,35 @@ export const sortOrder = async (chainID: number, slippage: number, amount: strin
   console.log("ensoSimulationPassed", ensoResult?.simulationPassed.status)
   console.log("barterSimulationPassed", barterResult?.simulationPassed.status)
   console.log("zeroXSimulationPassed", zeroXResults?.simulationPassed.status)
-  // console.log("oneInchSimulationPassed", oneInchResults?.simulationPassed.status)
+  console.log("oneInchSimulationPassed", oneInchResults?.simulationPassed.status)
 
   const quotes = [];
   let priceImpactPercentage
 
-  // if (oneInchResults && oneInchResults?.simulationPassed.status) {
-  //   if (tokenPriceData != null && tokenPriceData.length == 2) {
-  //     const tokenInPriceData = tokenPriceData.find(token => token.address === tokenIn.toLowerCase());
-  //     const tokenOutPriceData = tokenPriceData.find(token => token.address === tokenOut.toLowerCase());
-  //     priceImpactPercentage = calculatePriceImpactPercentage(oneInchResults.quote.dstAmount, amount, tokenInPriceData?.price ?? 0,
-  //       tokenOutPriceData?.price ?? 0,
-  //       tokenInPriceData?.decimals ?? 18,
-  //       tokenOutPriceData?.decimals ?? 18)
-  //   }
+  if (oneInchResults && oneInchResults?.simulationPassed.status) {
+    if (tokenPriceData != null && tokenPriceData.length == 2) {
+      const tokenInPriceData = tokenPriceData.find(token => token.address === tokenIn.toLowerCase());
+      const tokenOutPriceData = tokenPriceData.find(token => token.address === tokenOut.toLowerCase());
+      priceImpactPercentage = calculatePriceImpactPercentage(oneInchResults.quote.dstAmount, amount, tokenInPriceData?.price ?? 0,
+        tokenOutPriceData?.price ?? 0,
+        tokenInPriceData?.decimals ?? 18,
+        tokenOutPriceData?.decimals ?? 18)
+    }
 
-  //   const minAmountOut = getMinAmountOut(oneInchResults.quote.dstAmount, slippage);
+    const minAmountOut = getMinAmountOut(oneInchResults.quote.dstAmount, slippage);
 
-  //   quotes.push({
-  //     protocol: "oneInch",
-  //     to: swapContract,
-  //     data: oneInchResults.swapData,
-  //     value: oneInchResults.quote.tx.value,
-  //     amountOut: oneInchResults.quote.dstAmount,
-  //     minAmountOut: minAmountOut,
-  //     gasEstimate: oneInchResults.simulationPassed.gas,
-  //     simulationStatus: oneInchResults.simulationPassed.status,
-  //     priceImpactPercentage: priceImpactPercentage || 0
-  //   })
-  // }
+    quotes.push({
+      protocol: "oneInch",
+      to: swapContract,
+      data: oneInchResults.swapData,
+      value: oneInchResults.quote.tx.value,
+      amountOut: oneInchResults.quote.dstAmount,
+      minAmountOut: minAmountOut,
+      gasEstimate: oneInchResults.simulationPassed.gas,
+      simulationStatus: oneInchResults.simulationPassed.status,
+      priceImpactPercentage: priceImpactPercentage || 0
+    })
+  }
 
   if (zeroXResults && ensoResult?.simulationPassed.status) {
     if (tokenPriceData != null && tokenPriceData.length == 2) {

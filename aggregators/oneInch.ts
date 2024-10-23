@@ -19,6 +19,8 @@ export const getOneInchSwapData = async (
         slippage: slippage, 
         disableEstimate: true,
         includeGas: false,
+        // fee: process.env.ONEINCH_FEE,
+        // referrer: process.env.FEE_RECEIVER
       }
   
       const response = await axios.get(`https://api.1inch.dev/swap/v6.0/${chainId}/swap?${qs.stringify(params)}`, {
