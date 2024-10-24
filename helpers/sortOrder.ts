@@ -145,7 +145,7 @@ export const sortOrder = async (chainID: number, slippage: number, amount: strin
   }
 
 
-  if (portalfiResult && portalfiResult.simulationPassed.status) {
+  if (portalfiResult && portalfiResult.simulationPassed.status && portalfiQuote) {
     if (tokenPriceData != null && tokenPriceData.length == 2) {
       const tokenInPriceData = tokenPriceData.find(token => token.address === tokenIn.toLowerCase());
       const tokenOutPriceData = tokenPriceData.find(token => token.address === tokenOut.toLowerCase());
