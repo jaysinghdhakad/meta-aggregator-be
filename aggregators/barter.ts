@@ -31,6 +31,8 @@ export const getBarterSwap = async (slippage: number, amount: string, tokenIn: s
             }
         }
         )
+        
+        if (swapResponse.data.status != "Normal") return null
 
         return swapResponse.data
 
@@ -74,6 +76,7 @@ export const getBarterAmountAndSwap = async (slippage: number, amount: string, t
         if (!quote) return null
 
         const swapData = await getBarterSwap(slippage, amount, tokenIn, tokenOut, quote.outputWithGasAmount, receiver)
+        
         return swapData
 
     } catch (error) {
