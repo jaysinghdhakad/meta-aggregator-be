@@ -221,5 +221,5 @@ export const sortOrder = async (chainID: number, slippage: number, amount: strin
   // Sort quotes in descending order based on amountOut
   quotes.sort((a, b) => b.amountOut - a.amountOut);
 
-  return { quotes: quotes, approvalAddress: swapContract }
+  return { quotes: [quotes[0]], approvalAddress: swapContract }
 }
