@@ -14,6 +14,8 @@ export const sortOrder = async (chainID: number, slippage: number, amount: strin
     getPortalfiSwap(chainID, slippage, amount, tokenIn, tokenOut, swapContract, swapContract, false)
       .then(async (portalfi) => {
         if (!portalfi) return null;
+
+        console.log("portalfi", portalfi)
         const to = portalfi.tx.to
         const data = portalfi.tx.data
 
@@ -28,6 +30,8 @@ export const sortOrder = async (chainID: number, slippage: number, amount: strin
     getEnsoSwap(chainID, slippage, amount, tokenIn, tokenOut, swapContract, swapContract)
       .then(async (enso) => {
         if (!enso) return null;
+
+        console.log("enso", enso)
         const to = enso.tx.to
         const data = enso.tx.data
         const minAmountOut = getMinAmountOut(enso.amountOut, slippage);
@@ -42,6 +46,7 @@ export const sortOrder = async (chainID: number, slippage: number, amount: strin
     getBarterAmountAndSwap(slippage, amount, tokenIn, tokenOut, swapContract)
       .then(async (barter) => {
         if (!barter) return null;
+        console.log("barter", barter)
 
         const to = barter.to
         const data = barter.data
@@ -56,6 +61,7 @@ export const sortOrder = async (chainID: number, slippage: number, amount: strin
     getZeroExV2SwapData(tokenIn, tokenOut, amount, chainID, swapContract, slippage)
       .then(async (zerox) => {
         if (!zerox) return null;
+        console.log("zerox", zerox)
 
         const to = zerox.transaction.to;
         const data = zerox.transaction.data;
@@ -122,7 +128,7 @@ export const sortOrder = async (chainID: number, slippage: number, amount: strin
   //   })
   // }
 
-  if (zeroXResults && ensoResult?.simulationPassed.status) {
+  if (zeroXResults && zeroXResults?.simulationPassed.status) {
     if (tokenPriceData != null && tokenPriceData.length == 2) {
       const tokenInPriceData = tokenPriceData.find(token => token.address === tokenIn.toLowerCase());
       const tokenOutPriceData = tokenPriceData.find(token => token.address === tokenOut.toLowerCase());
