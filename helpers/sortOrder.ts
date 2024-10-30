@@ -2,6 +2,7 @@ import { getPortalfiSwap, getPortalfiQuote } from "../aggregators/portalfi";
 import { getEnsoSwap } from "../aggregators/enso";
 import { getBarterAmountAndSwap } from "../aggregators/barter";
 import { getZeroExV2SwapData } from "../aggregators/zerox"
+import {getWowMaxSwapData} from "../aggregators/wowMax";
 import { generateSimulationData, checkExecutionNotReverted } from "../simulations/simulation";
 import { getMinAmountOut, fetchPriceFromPortals, calculatePriceImpactPercentage, getChainName, getSwapContract, generateSwapData, getSwapManager } from "../utils/utils";
 export const sortOrder = async (chainID: number, slippage: number, amount: string, tokenIn: string, tokenOut: string, sender: string, receiver: string) => {
@@ -11,7 +12,7 @@ export const sortOrder = async (chainID: number, slippage: number, amount: strin
 
   
   // Get quotes and run simulations for all protocols
-  const [portalfiResult, ensoResult, barterResult, zeroXResults,tokenPriceData, portalfiQuote] = await Promise.all([
+  const [portalfiResult, ensoResult, barterResult, zeroXResults,wowMaxResults, tokenPriceData, portalfiQuote] = await Promise.all([
     getPortalfiSwap(chainID, slippage, amount, tokenIn, tokenOut, fromAddress, fromAddress, false)
       .then(async (portalfi) => {
         if (!portalfi) return null;
@@ -85,16 +86,32 @@ export const sortOrder = async (chainID: number, slippage: number, amount: strin
     //     const simulationPassed = await checkExecutionNotReverted(simulationData, chainID);
     //     return { quote: oneInch, simulationPassed, swapData: swapData }
     //   }),
+    getWowMaxSwapData(tokenIn,tokenOut,amount,chainID,slippage)
+    .then(async(wowMax)=> {
+      if(!wowMax) return null;
+      const to = wowMax.contract;
+      const data = wowMax.data;
+      const minAmountOut = getMinAmountOut(wowMax.amountOut, slippage);
+      const swapData = generateSwapData(tokenIn, tokenOut, to, data, amount, minAmountOut, receiver, false, chainID, isEth) || "";
+      const simulationData = await generateSimulationData(
+        chainID, amount, tokenIn, sender, swapContract, swapData, isEth
+      );
+      const simulationPassed = await checkExecutionNotReverted(simulationData, chainID);
+      return { quote: wowMax, simulationPassed, swapData: swapData }
+    }),
     fetchPriceFromPortals([tokenIn, tokenOut], getChainName(chainID) || 'base'),
     getPortalfiQuote(chainID, amount, tokenIn, tokenOut, sender, receiver)
   ]);
 
+  
+  
 
 
   console.log("portalsSimulationPassed", portalfiResult?.simulationPassed.status)
   console.log("ensoSimulationPassed", ensoResult?.simulationPassed.status)
   console.log("barterSimulationPassed", barterResult?.simulationPassed.status)
   console.log("zeroXSimulationPassed", zeroXResults?.simulationPassed.status)
+  console.log("wowMaxSimulationPassed", wowMaxResults?.simulationPassed.status)
   // console.log("oneInchSimulationPassed", oneInchResults?.simulationPassed.status)
 
   const quotes = [];
@@ -124,6 +141,30 @@ export const sortOrder = async (chainID: number, slippage: number, amount: strin
   //     priceImpactPercentage: priceImpactPercentage || 0
   //   })
   // }
+
+  if(wowMaxResults && wowMaxResults?.simulationPassed.status) {
+    const minAmountOut = getMinAmountOut(wowMaxResults.quote.amountOut, slippage);
+
+    if (tokenPriceData != null && tokenPriceData.length == 2) {
+      const tokenInPriceData = tokenPriceData.find(token => token.address === tokenIn.toLowerCase());
+      const tokenOutPriceData = tokenPriceData.find(token => token.address === tokenOut.toLowerCase());
+      priceImpactPercentage = calculatePriceImpactPercentage(wowMaxResults.quote.amountOut, amount, tokenInPriceData?.price ?? 0,
+        tokenOutPriceData?.price ?? 0,
+        tokenInPriceData?.decimals ?? 18,
+        tokenOutPriceData?.decimals ?? 18)
+    }
+    quotes.push({
+      protocol: "wowMax",
+      to: swapContract,
+      data: wowMaxResults.swapData,
+      value: wowMaxResults.quote.value,
+      amountOut: wowMaxResults.quote.amountOut,
+      minAmountOut: minAmountOut,
+      gasEstimate: wowMaxResults.simulationPassed.gas,
+      simulationStatus: wowMaxResults.simulationPassed.status,
+      priceImpactPercentage: priceImpactPercentage || 0
+    })
+  }
 
   if (zeroXResults && zeroXResults?.simulationPassed.status) {
     if (tokenPriceData != null && tokenPriceData.length == 2) {

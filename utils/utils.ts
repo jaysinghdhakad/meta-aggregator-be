@@ -83,6 +83,22 @@ export function getApprovalData(chainId: number, amount: string, tokenAddress: s
     }
 }
 
+
+export async function getDecimalsSymbol(chainId: number, tokenAddress: string) {
+    try {
+        if (chainId === baseChainID) {
+            const provider = getProvider(chainId)
+            const tokenContract = new ethers.Contract(tokenAddress, ERC20ABI, provider)
+            const symbol = await tokenContract.decimals();
+            return symbol
+        }
+    }
+    catch (error) {
+        console.log("error", error)
+        return null
+    }
+}
+
 export function generateSwapData(tokenIn: string, tokenOut: string, aggregator: string, swapData: string, amountIn: string, minAmountOut: string, receiver: string, isEnso: boolean, chainId: number, isETH: boolean) {
     try {
         if (chainId === baseChainID) {
