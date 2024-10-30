@@ -2,40 +2,39 @@ import { getPortalfiSwap, getPortalfiQuote } from "../aggregators/portalfi";
 import { getEnsoSwap } from "../aggregators/enso";
 import { getBarterAmountAndSwap } from "../aggregators/barter";
 import { getZeroExV2SwapData } from "../aggregators/zerox"
-import { getOneInchSwapData } from "../aggregators/oneInch"
 import { generateSimulationData, checkExecutionNotReverted } from "../simulations/simulation";
-import { getMinAmountOut, fetchPriceFromPortals, calculatePriceImpactPercentage, getChainName, getSwapContract, generateSwapData } from "../utils/utils";
+import { getMinAmountOut, fetchPriceFromPortals, calculatePriceImpactPercentage, getChainName, getSwapContract, generateSwapData, getSwapManager } from "../utils/utils";
 export const sortOrder = async (chainID: number, slippage: number, amount: string, tokenIn: string, tokenOut: string, sender: string, receiver: string) => {
   const isEth = tokenIn.toLowerCase() === '0xeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee';
-  const swapContract = getSwapContract(chainID) || ""
+  const swapContract = getSwapContract(chainID, isEth) || ""
+  const fromAddress = getSwapContract(chainID, true) || " "
 
+  
   // Get quotes and run simulations for all protocols
   const [portalfiResult, ensoResult, barterResult, zeroXResults,tokenPriceData, portalfiQuote] = await Promise.all([
-    getPortalfiSwap(chainID, slippage, amount, tokenIn, tokenOut, swapContract, swapContract, false)
+    getPortalfiSwap(chainID, slippage, amount, tokenIn, tokenOut, fromAddress, fromAddress, false)
       .then(async (portalfi) => {
         if (!portalfi) return null;
 
-        console.log("portalfi", portalfi)
         const to = portalfi.tx.to
         const data = portalfi.tx.data
 
         const minAmountOut = portalfi.context.minOutputAmount;
-        const swapData = generateSwapData(tokenIn, tokenOut, to, data, amount, minAmountOut, receiver, false, chainID) || ""
+        const swapData = generateSwapData(tokenIn, tokenOut, to, data, amount, minAmountOut, receiver, false, chainID, isEth) || ""
         const simulationData = await generateSimulationData(
           chainID, amount, tokenIn, sender, swapContract, swapData, isEth
         );
         const simulationPassed = await checkExecutionNotReverted(simulationData, chainID);
         return { quote: portalfi, simulationPassed, swapData: swapData };
       }),
-    getEnsoSwap(chainID, slippage, amount, tokenIn, tokenOut, swapContract, swapContract)
+    getEnsoSwap(chainID, slippage, amount, tokenIn, tokenOut, fromAddress, fromAddress)
       .then(async (enso) => {
         if (!enso) return null;
 
-        console.log("enso", enso)
         const to = enso.tx.to
         const data = enso.tx.data
         const minAmountOut = getMinAmountOut(enso.amountOut, slippage);
-        const swapData = generateSwapData(tokenIn, tokenOut, to, data, amount, minAmountOut, receiver, true, chainID,) || ""
+        const swapData = generateSwapData(tokenIn, tokenOut, to, data, amount, minAmountOut, receiver, true, chainID, isEth) || ""
 
         const simulationData = await generateSimulationData(
           chainID, amount, tokenIn, sender, swapContract, swapData, isEth
@@ -43,30 +42,28 @@ export const sortOrder = async (chainID: number, slippage: number, amount: strin
         const simulationPassed = await checkExecutionNotReverted(simulationData, chainID);
         return { quote: enso, simulationPassed, swapData: swapData };
       }),
-    getBarterAmountAndSwap(slippage, amount, tokenIn, tokenOut, swapContract)
+    getBarterAmountAndSwap(slippage, amount, tokenIn, tokenOut, fromAddress)
       .then(async (barter) => {
         if (!barter) return null;
-        console.log("barter", barter)
 
         const to = barter.to
         const data = barter.data
         const minAmountOut = getMinAmountOut(barter.route.outputAmount, slippage);
-        const swapData = generateSwapData(tokenIn, tokenOut, to, data, amount, minAmountOut, receiver, false, chainID) || ""
+        const swapData = generateSwapData(tokenIn, tokenOut, to, data, amount, minAmountOut, receiver, false, chainID, isEth) || ""
         const simulationData = await generateSimulationData(
           chainID, amount, tokenIn, sender, swapContract, swapData, isEth
         );
         const simulationPassed = await checkExecutionNotReverted(simulationData, chainID);
         return { quote: barter, simulationPassed, swapData: swapData };
       }),
-    getZeroExV2SwapData(tokenIn, tokenOut, amount, chainID, swapContract, slippage)
+    getZeroExV2SwapData(tokenIn, tokenOut, amount, chainID, fromAddress, slippage)
       .then(async (zerox) => {
         if (!zerox) return null;
-        console.log("zerox", zerox)
 
         const to = zerox.transaction.to;
         const data = zerox.transaction.data;
         const minAmountOut = zerox.minBuyAmount;
-        const swapData = generateSwapData(tokenIn, tokenOut, to, data, amount, minAmountOut, receiver, false, chainID) || "";
+        const swapData = generateSwapData(tokenIn, tokenOut, to, data, amount, minAmountOut, receiver, false, chainID, isEth) || "";
         const simulationData = await generateSimulationData(
           chainID, amount, tokenIn, sender, swapContract, swapData, isEth
         );

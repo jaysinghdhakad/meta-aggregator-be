@@ -2,6 +2,7 @@ import BigNumber from "bignumber.js";
 import { baseChainID } from "./config";
 import { ERC20ABI } from "./ERC20.abi";
 import { SWAPCONTRACTABI } from "./SWAPCONTRACT.abi";
+import { SWAPMANAGERABI } from "./SWAPMANAGER.abi";
 import { ethers } from "ethers";
 import axios from "axios";
 import { TokenObj } from "../types/types";
@@ -30,9 +31,23 @@ export function getApprovalAddressForChain(protocol: string, chainId: number) {
     }
 }
 
-export function getSwapContract(chainId:number) {
-    if(chainId === baseChainID) {
-        return process.env.SWAP_CONTRACT_BASE
+export function getSwapContract(chainId: number, isETH: boolean) {
+    if (chainId === baseChainID) {
+        if (isETH) return process.env.SWAP_CONTRACT_BASE
+        return process.env.SWAP_MANAGER_BASE;
+    }
+}
+
+export function getSwapContractABI(chainId: number, isETH: boolean) {
+    if (chainId === baseChainID) {
+        if (isETH) return SWAPCONTRACTABI
+        return SWAPMANAGERABI;
+    }
+}
+
+export function getSwapManager(chainID: number) {
+    if (chainID === baseChainID) {
+        return process.env.SWAP_MANAGER
     }
 }
 
@@ -68,13 +83,19 @@ export function getApprovalData(chainId: number, amount: string, tokenAddress: s
     }
 }
 
-export function generateSwapData(tokenIn: string , tokenOut: string, aggregator: string , swapData: string , amountIn: string, minAmountOut: string, receiver: string ,isEnso:boolean, chainId: number) {
+export function generateSwapData(tokenIn: string, tokenOut: string, aggregator: string, swapData: string, amountIn: string, minAmountOut: string, receiver: string, isEnso: boolean, chainId: number, isETH: boolean) {
     try {
         if (chainId === baseChainID) {
             const provider = getProvider(chainId)
-            const swapContract = getSwapContract(chainId) || "0x6AE14dFc12C6C3bf08E440f4933dd9b5a9295E00";
-            const tokenContract = new ethers.Contract(swapContract, SWAPCONTRACTABI, provider)
-            const calldata = tokenContract.interface.encodeFunctionData('swap', [tokenIn,tokenOut, aggregator, swapData, ethers.toBigInt(amountIn), ethers.toBigInt(minAmountOut), receiver, isEnso])
+            const swapContractAddress = getSwapContract(chainId, isETH) || "";
+            const swapContractAbi = getSwapContractABI(chainId, isETH) || "";
+            const swapContract = new ethers.Contract(swapContractAddress, swapContractAbi, provider)
+            let calldata;
+            if (isETH) {
+                calldata = swapContract.interface.encodeFunctionData('swapETH', [tokenIn, tokenOut, aggregator, swapData, ethers.toBigInt(amountIn), ethers.toBigInt(minAmountOut), receiver, isEnso])
+            } else {
+                calldata = swapContract.interface.encodeFunctionData('swap', [tokenIn, tokenOut, aggregator, swapData, ethers.toBigInt(amountIn), ethers.toBigInt(minAmountOut), receiver, isEnso])
+            }
             return calldata
         }
     }
