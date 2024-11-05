@@ -28,7 +28,7 @@ export const getZeroExV2SwapData = async (
                 "0x-version": "v2"
             },
         })
-
+        if(response.data.liquidityAvailable == false) return null;
         return response.data
     } catch (e) {
         console.log(" quote error", e);

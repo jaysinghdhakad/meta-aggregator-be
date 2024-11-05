@@ -12,7 +12,6 @@ export const getWowMaxSwapData = async (
 ): Promise<any> => {
     try {
         const tokenInDecimals = await getDecimalsSymbol(chainId,tokenIn)
-        console.log({amount,tokenInDecimals})
 
         const amountIn = BigNumber(amount).dividedBy(Math.pow(10,Number(tokenInDecimals))).toFixed(Number(tokenInDecimals))
 
@@ -23,9 +22,6 @@ export const getWowMaxSwapData = async (
             slippage: slippage ,
         }
 
-        console.log(params)
-
-        console.log(`https://api-gateway.wowmax.exchange/chains/${chainId}/swap?${qs.stringify(params)}`)
 
         const response = await axios.get(`https://api-gateway.wowmax.exchange/chains/${chainId}/swap?${qs.stringify(params)}`, {
             timeout: 6000,
