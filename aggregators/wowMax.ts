@@ -12,7 +12,7 @@ export const getWowMaxSwapData = async (
 ): Promise<any> => {
     try {
         let amountIn = amount;
-        if (tokenIn == process.env.ETH_ADDRESS_ENSO) {
+        if (tokenIn != process.env.ETH_ADDRESS_ENSO) {
             const tokenInDecimals = await getDecimalsSymbol(chainId, tokenIn)
 
             amountIn = BigNumber(amount).dividedBy(Math.pow(10, Number(tokenInDecimals))).toFixed(Number(tokenInDecimals))
