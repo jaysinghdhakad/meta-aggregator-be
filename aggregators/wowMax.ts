@@ -16,6 +16,10 @@ export const getWowMaxSwapData = async (
             const tokenInDecimals = await getDecimalsSymbol(chainId, tokenIn)
 
             amountIn = BigNumber(amount).dividedBy(Math.pow(10, Number(tokenInDecimals))).toFixed(Number(tokenInDecimals))
+        } else {
+            amountIn = BigNumber(amount).dividedBy(Math.pow(10, Number(18))).toFixed(Number(18))
+            tokenIn = process.env.ETH_ADDRESS || "";
+
         }
 
         const params = {
@@ -29,7 +33,6 @@ export const getWowMaxSwapData = async (
         const response = await axios.get(`https://api-gateway.wowmax.exchange/chains/${chainId}/swap?${qs.stringify(params)}`, {
             timeout: 6000,
         })
-
         return response.data
     } catch (e) {
         console.log("quote error", e);
