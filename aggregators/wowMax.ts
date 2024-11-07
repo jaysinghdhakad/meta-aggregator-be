@@ -11,15 +11,18 @@ export const getWowMaxSwapData = async (
     slippage: number,
 ): Promise<any> => {
     try {
-        const tokenInDecimals = await getDecimalsSymbol(chainId,tokenIn)
+        let amountIn = amount;
+        if (tokenIn == process.env.ETH_ADDRESS_ENSO) {
+            const tokenInDecimals = await getDecimalsSymbol(chainId, tokenIn)
 
-        const amountIn = BigNumber(amount).dividedBy(Math.pow(10,Number(tokenInDecimals))).toFixed(Number(tokenInDecimals))
+            amountIn = BigNumber(amount).dividedBy(Math.pow(10, Number(tokenInDecimals))).toFixed(Number(tokenInDecimals))
+        }
 
         const params = {
             from: tokenIn,
             to: tokenOut,
             amount: amountIn,
-            slippage: slippage ,
+            slippage: slippage,
         }
 
 
