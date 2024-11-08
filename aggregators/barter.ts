@@ -32,7 +32,7 @@ export const getBarterSwap = async (slippage: number, amount: string, tokenIn: s
         }
         )
         
-        if (swapResponse.data.status != "Normal") return null
+        if (swapResponse.data.status != "Success" && swapResponse.data.route.status != "Normal") return null
 
         return swapResponse.data
 
@@ -61,7 +61,7 @@ export const getBarterQuote = async (amount: string, tokenIn: string, tokenOut: 
             }
         })
         // return null if the status is not normal
-        if (routeData.data.status != "Success" && routeData.data.route.status != "Normal") return null
+        if (routeData.data.status != "Success") return null
         return routeData.data
     } catch (error) {
         console.log("barter quote error", error)
