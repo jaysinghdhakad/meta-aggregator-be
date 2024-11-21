@@ -3,8 +3,10 @@ import { getEnsoSwap } from "../aggregators/enso";
 import { getBarterAmountAndSwap } from "../aggregators/barter";
 import { getZeroExV2SwapData } from "../aggregators/zerox"
 import {getWowMaxSwapData} from "../aggregators/wowMax";
+import { getKyberSwapData } from "../aggregators/kyberswap";
 import { generateSimulationData, checkExecutionNotReverted } from "../simulations/simulation";
-import { getMinAmountOut, fetchPriceFromPortals, calculatePriceImpactPercentage, getChainName, getSwapContract, generateSwapData, getSwapManager } from "../utils/utils";
+import { getMinAmountOut, fetchPriceFromPortals, calculatePriceImpactPercentage, getChainName, getSwapContract, generateSwapData } from "../utils/utils";
+import BigNumber from "bignumber.js";
 export const sortOrder = async (chainID: number, slippage: number, amount: string, tokenIn: string, tokenOut: string, sender: string, receiver: string) => {
   const isEth = tokenIn.toLowerCase() === '0xeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee';
   const swapContract = getSwapContract(chainID, isEth) || ""
@@ -12,7 +14,7 @@ export const sortOrder = async (chainID: number, slippage: number, amount: strin
 
   
   // Get quotes and run simulations for all protocols
-  const [portalfiResult, ensoResult, barterResult, zeroXResults,wowMaxResults, tokenPriceData, portalfiQuote] = await Promise.all([
+  const [portalfiResult, ensoResult, barterResult, zeroXResults,wowMaxResults,kyberswapData, tokenPriceData, portalfiQuote] = await Promise.all([
     getPortalfiSwap(chainID, slippage, amount, tokenIn, tokenOut, fromAddress, fromAddress, false)
       .then(async (portalfi) => {
         if (!portalfi) return null;
@@ -99,6 +101,19 @@ export const sortOrder = async (chainID: number, slippage: number, amount: strin
       const simulationPassed = await checkExecutionNotReverted(simulationData, chainID);
       return { quote: wowMax, simulationPassed, swapData: swapData }
     }),
+    getKyberSwapData(tokenIn,tokenOut,amount,chainID,fromAddress,slippage).then(async(kyberswap)=>{
+      if(!kyberswap) return null;
+  
+      const to = kyberswap.routerAddress;
+      const data = kyberswap.encodedSwapData;
+      const minAmountOut = getMinAmountOut(kyberswap.outputAmount, slippage);
+      const swapData = generateSwapData(tokenIn, tokenOut, to, data, amount, minAmountOut, receiver, false, chainID, isEth) || "";
+      const simulationData = await generateSimulationData(
+        chainID, amount, tokenIn, sender, swapContract, swapData, isEth
+      );
+      const simulationPassed = await checkExecutionNotReverted(simulationData, chainID);
+      return { quote: kyberswap, simulationPassed, swapData: swapData }
+    }),
     fetchPriceFromPortals([tokenIn, tokenOut], getChainName(chainID) || 'base'),
     getPortalfiQuote(chainID, amount, tokenIn, tokenOut, sender, receiver)
   ]);
@@ -112,6 +127,7 @@ export const sortOrder = async (chainID: number, slippage: number, amount: strin
   console.log("barterSimulationPassed", barterResult?.simulationPassed.status)
   console.log("zeroXSimulationPassed", zeroXResults?.simulationPassed.status)
   console.log("wowMaxSimulationPassed", wowMaxResults?.simulationPassed.status)
+  console.log("kyberswapSimulationPassed", kyberswapData?.simulationPassed.status)
   // console.log("oneInchSimulationPassed", oneInchResults?.simulationPassed.status)
 
   const quotes = [];
@@ -141,6 +157,31 @@ export const sortOrder = async (chainID: number, slippage: number, amount: strin
   //     priceImpactPercentage: priceImpactPercentage || 0
   //   })
   // }
+
+
+  if(kyberswapData && kyberswapData?.simulationPassed.status) {
+    const minAmountOut = getMinAmountOut(kyberswapData.quote.amountOut, slippage);
+
+    if (tokenPriceData != null && tokenPriceData.length == 2) {
+      const tokenInPriceData = tokenPriceData.find(token => token.address === tokenIn.toLowerCase());
+      const tokenOutPriceData = tokenPriceData.find(token => token.address === tokenOut.toLowerCase());
+      priceImpactPercentage = calculatePriceImpactPercentage(kyberswapData.quote.outputAmount, amount, tokenInPriceData?.price ?? 0,
+        tokenOutPriceData?.price ?? 0,
+        tokenInPriceData?.decimals ?? 18,
+        tokenOutPriceData?.decimals ?? 18)
+    }
+    quotes.push({
+      protocol: "kyberswap",
+      to: swapContract,
+      data: kyberswapData.swapData,
+      value: isEth ? BigNumber(amount).toNumber() : 0,
+      amountOut: kyberswapData.quote.outputAmount,
+      minAmountOut: minAmountOut,
+      gasEstimate: kyberswapData.simulationPassed.gas,
+      simulationStatus: kyberswapData.simulationPassed.status,
+      priceImpactPercentage: priceImpactPercentage || 0
+    })
+  }
 
   if(wowMaxResults && wowMaxResults?.simulationPassed.status) {
     const minAmountOut = getMinAmountOut(wowMaxResults.quote.amountOut, slippage);
