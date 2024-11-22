@@ -91,9 +91,10 @@ export const sortOrder = async (chainID: number, slippage: number, amount: strin
     getWowMaxSwapData(tokenIn,tokenOut,amount,chainID,slippage)
     .then(async(wowMax)=> {
       if(!wowMax) return null;
+
       const to = wowMax.contract;
       const data = wowMax.data;
-      const minAmountOut = getMinAmountOut(wowMax.amountOut, slippage);
+      const minAmountOut = getMinAmountOut(wowMax.amountOut[0], slippage);
       const swapData = generateSwapData(tokenIn, tokenOut, to, data, amount, minAmountOut, receiver, false, chainID, isEth) || "";
       const simulationData = await generateSimulationData(
         chainID, amount, tokenIn, sender, swapContract, swapData, isEth
@@ -194,12 +195,13 @@ export const sortOrder = async (chainID: number, slippage: number, amount: strin
         tokenInPriceData?.decimals ?? 18,
         tokenOutPriceData?.decimals ?? 18)
     }
+
     quotes.push({
       protocol: "wowMax",
       to: swapContract,
       data: wowMaxResults.swapData,
       value: wowMaxResults.quote.value,
-      amountOut: wowMaxResults.quote.amountOut,
+      amountOut: wowMaxResults.quote.amountOut[0],
       minAmountOut: minAmountOut,
       gasEstimate: wowMaxResults.simulationPassed.gas,
       simulationStatus: wowMaxResults.simulationPassed.status,
