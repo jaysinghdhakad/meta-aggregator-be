@@ -2,7 +2,7 @@ export interface ITransactionData {
     from: string
     input: any
     to: string,
-    value: number
+    value: string
   }
 
 export interface TokenObj {

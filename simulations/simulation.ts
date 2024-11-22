@@ -31,6 +31,7 @@ export const checkExecutionNotReverted = async (transactionData: ITransactionDat
         const gas = response.simulation_results[transactionData.length - 1].transaction.gas
         return { status: status, gas: gas }
     } catch (err) {
+        console.log("tenderly simulation error::",err)
         return { status: false, gas: 0 }
     }
 }
@@ -55,7 +56,7 @@ export async function generateSimulationData(
             from: userAddress,
             to: tokenAddress,
             input: approvalData,
-            value: 0
+            value: "0"
         });
     }
 
@@ -63,7 +64,7 @@ export async function generateSimulationData(
     simulationData.push({
         from: userAddress,
         to: swapContractAddress,
-        value: isEth ? BigNumber(amount).toNumber() : 0,
+        value: isEth ? BigNumber(amount).toFixed(0) : "0",
         input: swapData,
     });
 
