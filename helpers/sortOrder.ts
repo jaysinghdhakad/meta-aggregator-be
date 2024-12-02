@@ -195,7 +195,7 @@ export const sortOrder = async (chainID: number, slippage: number, amount: strin
 
 
   if (kyberswapData && kyberswapData?.simulationPassed.status) {
-    const minAmountOut = getMinAmountOut(kyberswapData.quote.amountOut, slippage);
+    const minAmountOut = getMinAmountOut(kyberswapData.quote.outputAmount, slippage);
 
     if (tokenPriceData != null && tokenPriceData.length == 2) {
       const tokenInPriceData = tokenPriceData.find(token => token.address === tokenIn.toLowerCase());
