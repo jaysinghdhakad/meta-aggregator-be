@@ -51,7 +51,7 @@ const validateSwapParams = (
   res: express.Response,
   next: express.NextFunction
 ) => {
-  const { tokenIn, tokenOut, amount, receiver, sender, chainId, slippage, protocol, amountOut } = req.body;
+  const { tokenIn, tokenOut, amount, receiver, sender, chainId, slippage, protocol, amountOut, skipSimulation } = req.body;
 
   const errors: string[] = [];
   // Validate token addresses
@@ -91,6 +91,10 @@ const validateSwapParams = (
     errors.push("Invalid amountOut: must be a positive number");
   }
 
+  if (skipSimulation && typeof skipSimulation !== 'boolean') {
+    errors.push("Invalid skipSimulation: must be a boolean value");
+  }
+
 
   if (errors.length > 0) {
     return res.status(400).json({ errors });
@@ -109,10 +113,10 @@ const validateRequest = (requiredFields: string[]) => {
 
 
 // This is for the best quotes with swap data. This endpoint queries all protocols and returns the best quotes with swap data in descending order of amount out
-app.post('/best-quotes', validateRequest(['slippage', 'amount', 'tokenIn', 'tokenOut', 'sender', 'receiver', 'chainId']), async (req: express.Request, res: express.Response) => {
-  let { slippage, amount, tokenIn, tokenOut, sender, receiver, chainId } = req.body;
+app.post('/best-quotes', validateRequest(['slippage', 'amount', 'tokenIn', 'tokenOut', 'sender', 'receiver', 'chainId', 'skipSimulation']), async (req: express.Request, res: express.Response) => {
+  let { slippage, amount, tokenIn, tokenOut, sender, receiver, chainId, skipSimulation } = req.body;
   // sort the quotes by amount out and return the quotes in descending order of amount out
-  const swapData = await sortOrder(chainId, slippage, amount, tokenIn, tokenOut, sender, receiver)
+  const swapData = await sortOrder(chainId, slippage, amount, tokenIn, tokenOut, sender, receiver, skipSimulation)
   if (swapData.quotes.length == 0) return res.status(404).send({ message: "No quotes found" });
   res.send(swapData);
 });

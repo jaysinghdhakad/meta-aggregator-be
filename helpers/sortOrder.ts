@@ -2,19 +2,19 @@ import { getPortalfiSwap, getPortalfiQuote } from "../aggregators/portalfi";
 import { getEnsoSwap } from "../aggregators/enso";
 import { getBarterAmountAndSwap } from "../aggregators/barter";
 import { getZeroExV2SwapData } from "../aggregators/zerox"
-import {getWowMaxSwapData} from "../aggregators/wowMax";
+import { getWowMaxSwapData } from "../aggregators/wowMax";
 import { getKyberSwapData } from "../aggregators/kyberswap";
 import { generateSimulationData, checkExecutionNotReverted } from "../simulations/simulation";
 import { getMinAmountOut, fetchPriceFromPortals, calculatePriceImpactPercentage, getChainName, getSwapContract, generateSwapData } from "../utils/utils";
 import BigNumber from "bignumber.js";
-export const sortOrder = async (chainID: number, slippage: number, amount: string, tokenIn: string, tokenOut: string, sender: string, receiver: string) => {
+export const sortOrder = async (chainID: number, slippage: number, amount: string, tokenIn: string, tokenOut: string, sender: string, receiver: string, skipSimulation: boolean) => {
   const isEth = tokenIn.toLowerCase() === '0xeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee';
   const swapContract = getSwapContract(chainID, isEth) || ""
   const fromAddress = getSwapContract(chainID, true) || " "
 
-  
+
   // Get quotes and run simulations for all protocols
-  const [portalfiResult, ensoResult, barterResult, zeroXResults,wowMaxResults,kyberswapData, tokenPriceData, portalfiQuote] = await Promise.all([
+  const [portalfiResult, ensoResult, barterResult, zeroXResults, wowMaxResults, kyberswapData, tokenPriceData, portalfiQuote] = await Promise.all([
     getPortalfiSwap(chainID, slippage, amount, tokenIn, tokenOut, fromAddress, fromAddress, false)
       .then(async (portalfi) => {
         if (!portalfi) return null;
@@ -24,10 +24,16 @@ export const sortOrder = async (chainID: number, slippage: number, amount: strin
 
         const minAmountOut = portalfi.context.minOutputAmount;
         const swapData = generateSwapData(tokenIn, tokenOut, to, data, amount, minAmountOut, receiver, false, chainID, isEth) || ""
-        const simulationData = await generateSimulationData(
-          chainID, amount, tokenIn, sender, swapContract, swapData, isEth
-        );
-        const simulationPassed = await checkExecutionNotReverted(simulationData, chainID);
+
+        let simulationPassed;
+        if (!skipSimulation) {
+          const simulationData = await generateSimulationData(
+            chainID, amount, tokenIn, sender, swapContract, swapData, isEth
+          );
+          simulationPassed = await checkExecutionNotReverted(simulationData, chainID);
+        } else {
+          simulationPassed = { status: true, gas: 0 }
+        }
         return { quote: portalfi, simulationPassed, swapData: swapData };
       }),
     getEnsoSwap(chainID, slippage, amount, tokenIn, tokenOut, fromAddress, fromAddress)
@@ -39,10 +45,16 @@ export const sortOrder = async (chainID: number, slippage: number, amount: strin
         const minAmountOut = getMinAmountOut(enso.amountOut, slippage);
         const swapData = generateSwapData(tokenIn, tokenOut, to, data, amount, minAmountOut, receiver, true, chainID, isEth) || ""
 
-        const simulationData = await generateSimulationData(
-          chainID, amount, tokenIn, sender, swapContract, swapData, isEth
-        );
-        const simulationPassed = await checkExecutionNotReverted(simulationData, chainID);
+
+        let simulationPassed;
+        if (!skipSimulation) {
+          const simulationData = await generateSimulationData(
+            chainID, amount, tokenIn, sender, swapContract, swapData, isEth
+          );
+          simulationPassed = await checkExecutionNotReverted(simulationData, chainID);
+        } else {
+          simulationPassed = { status: true, gas: 0 }
+        }
         return { quote: enso, simulationPassed, swapData: swapData };
       }),
     getBarterAmountAndSwap(slippage, amount, tokenIn, tokenOut, fromAddress)
@@ -53,10 +65,16 @@ export const sortOrder = async (chainID: number, slippage: number, amount: strin
         const data = barter.data
         const minAmountOut = getMinAmountOut(barter.route.outputAmount, slippage);
         const swapData = generateSwapData(tokenIn, tokenOut, to, data, amount, minAmountOut, receiver, false, chainID, isEth) || ""
-        const simulationData = await generateSimulationData(
-          chainID, amount, tokenIn, sender, swapContract, swapData, isEth
-        );
-        const simulationPassed = await checkExecutionNotReverted(simulationData, chainID);
+
+        let simulationPassed;
+        if (!skipSimulation) {
+          const simulationData = await generateSimulationData(
+            chainID, amount, tokenIn, sender, swapContract, swapData, isEth
+          );
+          simulationPassed = await checkExecutionNotReverted(simulationData, chainID);
+        } else {
+          simulationPassed = { status: true, gas: 0 }
+        }
         return { quote: barter, simulationPassed, swapData: swapData };
       }),
     getZeroExV2SwapData(tokenIn, tokenOut, amount, chainID, fromAddress, slippage)
@@ -67,10 +85,16 @@ export const sortOrder = async (chainID: number, slippage: number, amount: strin
         const data = zerox.transaction.data;
         const minAmountOut = zerox.minBuyAmount;
         const swapData = generateSwapData(tokenIn, tokenOut, to, data, amount, minAmountOut, receiver, false, chainID, isEth) || "";
-        const simulationData = await generateSimulationData(
-          chainID, amount, tokenIn, sender, swapContract, swapData, isEth
-        );
-        const simulationPassed = await checkExecutionNotReverted(simulationData, chainID);
+
+        let simulationPassed;
+        if (!skipSimulation) {
+          const simulationData = await generateSimulationData(
+            chainID, amount, tokenIn, sender, swapContract, swapData, isEth
+          );
+          simulationPassed = await checkExecutionNotReverted(simulationData, chainID);
+        } else {
+          simulationPassed = { status: true, gas: 0 }
+        }
         return { quote: zerox, simulationPassed, swapData: swapData }
       }),
     // getOneInchSwapData(tokenIn, tokenOut, amount, chainID, swapContract, slippage)
@@ -88,39 +112,49 @@ export const sortOrder = async (chainID: number, slippage: number, amount: strin
     //     const simulationPassed = await checkExecutionNotReverted(simulationData, chainID);
     //     return { quote: oneInch, simulationPassed, swapData: swapData }
     //   }),
-    getWowMaxSwapData(tokenIn,tokenOut,amount,chainID,slippage)
-    .then(async(wowMax)=> {
-      if(!wowMax) return null;
+    getWowMaxSwapData(tokenIn, tokenOut, amount, chainID, slippage)
+      .then(async (wowMax) => {
+        if (!wowMax) return null;
 
-      const to = wowMax.contract;
-      const data = wowMax.data;
-      const minAmountOut = getMinAmountOut(wowMax.amountOut[0], slippage);
-      const swapData = generateSwapData(tokenIn, tokenOut, to, data, amount, minAmountOut, receiver, false, chainID, isEth) || "";
-      const simulationData = await generateSimulationData(
-        chainID, amount, tokenIn, sender, swapContract, swapData, isEth
-      );
-      const simulationPassed = await checkExecutionNotReverted(simulationData, chainID);
-      return { quote: wowMax, simulationPassed, swapData: swapData }
-    }),
-    getKyberSwapData(tokenIn,tokenOut,amount,chainID,fromAddress,slippage).then(async(kyberswap)=>{
-      if(!kyberswap) return null;
-  
+        const to = wowMax.contract;
+        const data = wowMax.data;
+        const minAmountOut = getMinAmountOut(wowMax.amountOut[0], slippage);
+        const swapData = generateSwapData(tokenIn, tokenOut, to, data, amount, minAmountOut, receiver, false, chainID, isEth) || "";
+
+        let simulationPassed;
+        if (!skipSimulation) {
+          const simulationData = await generateSimulationData(
+            chainID, amount, tokenIn, sender, swapContract, swapData, isEth
+          );
+          simulationPassed = await checkExecutionNotReverted(simulationData, chainID);
+        } else {
+          simulationPassed = { status: true, gas: 0 }
+        }
+        return { quote: wowMax, simulationPassed, swapData: swapData }
+      }),
+    getKyberSwapData(tokenIn, tokenOut, amount, chainID, fromAddress, slippage).then(async (kyberswap) => {
+      if (!kyberswap) return null;
+
       const to = kyberswap.routerAddress;
       const data = kyberswap.encodedSwapData;
       const minAmountOut = getMinAmountOut(kyberswap.outputAmount, slippage);
       const swapData = generateSwapData(tokenIn, tokenOut, to, data, amount, minAmountOut, receiver, false, chainID, isEth) || "";
-      const simulationData = await generateSimulationData(
-        chainID, amount, tokenIn, sender, swapContract, swapData, isEth
-      );
-      const simulationPassed = await checkExecutionNotReverted(simulationData, chainID);
+
+      let simulationPassed;
+      if (!skipSimulation) {
+        const simulationData = await generateSimulationData(
+          chainID, amount, tokenIn, sender, swapContract, swapData, isEth
+        );
+        simulationPassed = await checkExecutionNotReverted(simulationData, chainID);
+      } else {
+        simulationPassed = { status: true, gas: 0 }
+      }
       return { quote: kyberswap, simulationPassed, swapData: swapData }
     }),
     fetchPriceFromPortals([tokenIn, tokenOut], getChainName(chainID) || 'base'),
     getPortalfiQuote(chainID, amount, tokenIn, tokenOut, sender, receiver)
   ]);
 
-  
-  
 
 
   console.log("portalsSimulationPassed", portalfiResult?.simulationPassed.status)
@@ -160,7 +194,7 @@ export const sortOrder = async (chainID: number, slippage: number, amount: strin
   // }
 
 
-  if(kyberswapData && kyberswapData?.simulationPassed.status) {
+  if (kyberswapData && kyberswapData?.simulationPassed.status) {
     const minAmountOut = getMinAmountOut(kyberswapData.quote.amountOut, slippage);
 
     if (tokenPriceData != null && tokenPriceData.length == 2) {
@@ -184,7 +218,7 @@ export const sortOrder = async (chainID: number, slippage: number, amount: strin
     })
   }
 
-  if(wowMaxResults && wowMaxResults?.simulationPassed.status) {
+  if (wowMaxResults && wowMaxResults?.simulationPassed.status) {
     const minAmountOut = getMinAmountOut(wowMaxResults.quote.amountOut, slippage);
 
     if (tokenPriceData != null && tokenPriceData.length == 2) {
