@@ -50,6 +50,9 @@
                                     },
                                     "chainId": {
                                         "type": "number"
+                                    },
+                                    "skipSimulation": {
+                                        "type": "boolean"
                                     }
                                 }
                             }
@@ -127,7 +130,8 @@
                                                 "Invalid amount: must be a positive number",
                                                 "Invalid receiver address",
                                                 "Invalid sender address",
-                                                "Invalid slippage: must be a non-negative number"
+                                                "Invalid slippage: must be a non-negative number",
+                                                "Invalid skipSimulation: must be a boolean value"
                                             ]
                                         }
                                     }
