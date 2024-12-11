@@ -9,7 +9,7 @@ import { getMinAmountOut, fetchPriceFromPortals, calculatePriceImpactPercentage,
 import BigNumber from "bignumber.js";
 export const sortOrder = async (chainID: number, slippage: number, amount: string, tokenIn: string, tokenOut: string, sender: string, receiver: string, skipSimulation: boolean) => {
   const isEth = tokenIn.toLowerCase() === '0xeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee';
-  const swapContract = getSwapContract(chainID, true) || " ";
+  const swapContract = getSwapContract(chainID, isEth || skipSimulation) || " ";
   const fromAddress = skipSimulation ? sender : getSwapContract(chainID, true) || " ";
 
 
