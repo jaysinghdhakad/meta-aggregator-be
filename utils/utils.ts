@@ -6,6 +6,7 @@ import { SWAPMANAGERABI } from "./SWAPMANAGER.abi";
 import { ethers } from "ethers";
 import axios from "axios";
 import { TokenObj } from "../types/types";
+import { skip } from "node:test";
 // This function finds the max of three numbers.
 export function findMax(a: any, b: any, c: any) {
     const maxAB = BigNumber.max(a, b);
@@ -99,19 +100,28 @@ export async function getDecimalsSymbol(chainId: number, tokenAddress: string) {
     }
 }
 
-export function generateSwapData(tokenIn: string, tokenOut: string, aggregator: string, swapData: string, amountIn: string, minAmountOut: string, receiver: string, isEnso: boolean, chainId: number, isETH: boolean) {
+export function generateSwapData(tokenIn: string, tokenOut: string, aggregator: string, swapData: string, amountIn: string, minAmountOut: string, receiver: string, isEnso: boolean, chainId: number, isETH: boolean, skipSimulation:boolean) {
     try {
         if (chainId === baseChainID) {
             const provider = getProvider(chainId)
-            const swapContractAddress = getSwapContract(chainId, isETH) || "";
-            const swapContractAbi = getSwapContractABI(chainId, isETH) || "";
+            const swapContractAddress = getSwapContract(chainId, isETH || skipSimulation) || "";
+            const swapContractAbi = getSwapContractABI(chainId, isETH  || skipSimulation) || "";
             const swapContract = new ethers.Contract(swapContractAddress, swapContractAbi, provider)
             let calldata;
-            if (isETH) {
-                calldata = swapContract.interface.encodeFunctionData('swapETH', [tokenIn, tokenOut, aggregator, swapData, ethers.toBigInt(amountIn), ethers.toBigInt(minAmountOut), receiver, isEnso])
+            if(!skipSimulation) {
+                if (isETH) {
+                    calldata = swapContract.interface.encodeFunctionData('swapETH', [tokenIn, tokenOut, aggregator, swapData, ethers.toBigInt(amountIn), ethers.toBigInt(minAmountOut), receiver, isEnso])
+                } else {
+                    calldata = swapContract.interface.encodeFunctionData('swap', [tokenIn, tokenOut, aggregator, swapData, ethers.toBigInt(amountIn), ethers.toBigInt(minAmountOut), receiver, isEnso])
+                }
             } else {
-                calldata = swapContract.interface.encodeFunctionData('swap', [tokenIn, tokenOut, aggregator, swapData, ethers.toBigInt(amountIn), ethers.toBigInt(minAmountOut), receiver, isEnso])
+                if (isETH) {
+                    calldata = swapContract.interface.encodeFunctionData('swapETHDelegate', [tokenIn, tokenOut, aggregator, swapData, ethers.toBigInt(amountIn), ethers.toBigInt(minAmountOut), receiver, isEnso])
+                } else {
+                    calldata = swapContract.interface.encodeFunctionData('swapERC20Delegate', [tokenIn, tokenOut, aggregator, swapData, ethers.toBigInt(amountIn), ethers.toBigInt(minAmountOut), receiver, isEnso])
+                } 
             }
+           
             return calldata
         }
     }

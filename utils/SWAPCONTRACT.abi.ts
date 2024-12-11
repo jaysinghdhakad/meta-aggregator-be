@@ -1,9 +1,14 @@
-export const SWAPCONTRACTABI = [
+export const SWAPCONTRACTABI =  [
   {
     "inputs": [
       {
         "internalType": "address",
         "name": "_ensoSwapContract",
+        "type": "address"
+      },
+      {
+        "internalType": "address",
+        "name": "_usdt",
         "type": "address"
       }
     ],
@@ -13,6 +18,32 @@ export const SWAPCONTRACTABI = [
   {
     "inputs": [],
     "name": "AmountInMustBeGreaterThanZero",
+    "type": "error"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "token",
+        "type": "address"
+      },
+      {
+        "internalType": "address",
+        "name": "to",
+        "type": "address"
+      },
+      {
+        "internalType": "uint256",
+        "name": "value",
+        "type": "uint256"
+      }
+    ],
+    "name": "ApprovalFailed",
+    "type": "error"
+  },
+  {
+    "inputs": [],
+    "name": "CannotSwapETH",
     "type": "error"
   },
   {
@@ -42,12 +73,22 @@ export const SWAPCONTRACTABI = [
   },
   {
     "inputs": [],
-    "name": "InsufficientTokenInBalance",
+    "name": "InsufficientTokenOutAmount",
     "type": "error"
   },
   {
     "inputs": [],
-    "name": "InsufficientTokenOutAmount",
+    "name": "InvalidENSOAddress",
+    "type": "error"
+  },
+  {
+    "inputs": [],
+    "name": "InvalidReceiver",
+    "type": "error"
+  },
+  {
+    "inputs": [],
+    "name": "InvalidUSDTAddress",
     "type": "error"
   },
   {
@@ -57,7 +98,7 @@ export const SWAPCONTRACTABI = [
   },
   {
     "inputs": [],
-    "name": "ReentrancyGuardReentrantCall",
+    "name": "NotDelegate",
     "type": "error"
   },
   {
@@ -71,12 +112,95 @@ export const SWAPCONTRACTABI = [
     "type": "error"
   },
   {
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "token",
+        "type": "address"
+      },
+      {
+        "internalType": "address",
+        "name": "to",
+        "type": "address"
+      },
+      {
+        "internalType": "uint256",
+        "name": "value",
+        "type": "uint256"
+      }
+    ],
+    "name": "TransferFailed",
+    "type": "error"
+  },
+  {
     "anonymous": false,
     "inputs": [
       {
         "indexed": true,
         "internalType": "uint256",
-        "name": "amount",
+        "name": "amountOut",
+        "type": "uint256"
+      },
+      {
+        "indexed": true,
+        "internalType": "address",
+        "name": "tokenIn",
+        "type": "address"
+      },
+      {
+        "indexed": true,
+        "internalType": "address",
+        "name": "tokenOut",
+        "type": "address"
+      },
+      {
+        "indexed": false,
+        "internalType": "address",
+        "name": "receiver",
+        "type": "address"
+      }
+    ],
+    "name": "ERC20Swapped",
+    "type": "event"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": true,
+        "internalType": "uint256",
+        "name": "amountOut",
+        "type": "uint256"
+      },
+      {
+        "indexed": true,
+        "internalType": "address",
+        "name": "tokenIn",
+        "type": "address"
+      },
+      {
+        "indexed": true,
+        "internalType": "address",
+        "name": "tokenOut",
+        "type": "address"
+      },
+      {
+        "indexed": false,
+        "internalType": "address",
+        "name": "receiver",
+        "type": "address"
+      }
+    ],
+    "name": "ERC20SwappedDelegate",
+    "type": "event"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": true,
+        "internalType": "uint256",
+        "name": "amountOut",
         "type": "uint256"
       },
       {
@@ -84,9 +208,40 @@ export const SWAPCONTRACTABI = [
         "internalType": "address",
         "name": "tokenOut",
         "type": "address"
+      },
+      {
+        "indexed": true,
+        "internalType": "address",
+        "name": "receiver",
+        "type": "address"
       }
     ],
-    "name": "AmountSent",
+    "name": "ETHSwappedDelegate",
+    "type": "event"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": true,
+        "internalType": "uint256",
+        "name": "amountOut",
+        "type": "uint256"
+      },
+      {
+        "indexed": true,
+        "internalType": "address",
+        "name": "tokenOut",
+        "type": "address"
+      },
+      {
+        "indexed": true,
+        "internalType": "address",
+        "name": "receiver",
+        "type": "address"
+      }
+    ],
+    "name": "ETHSwappedForToken",
     "type": "event"
   },
   {
@@ -180,8 +335,116 @@ export const SWAPCONTRACTABI = [
         "type": "bool"
       }
     ],
+    "name": "swapERC20Delegate",
+    "outputs": [
+      {
+        "internalType": "uint256",
+        "name": "amountOut",
+        "type": "uint256"
+      }
+    ],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "tokenIn",
+        "type": "address"
+      },
+      {
+        "internalType": "contract IERC20",
+        "name": "tokenOut",
+        "type": "address"
+      },
+      {
+        "internalType": "address",
+        "name": "aggregator",
+        "type": "address"
+      },
+      {
+        "internalType": "bytes",
+        "name": "swapData",
+        "type": "bytes"
+      },
+      {
+        "internalType": "uint256",
+        "name": "amountIn",
+        "type": "uint256"
+      },
+      {
+        "internalType": "uint256",
+        "name": "minAmountOut",
+        "type": "uint256"
+      },
+      {
+        "internalType": "address",
+        "name": "receiver",
+        "type": "address"
+      },
+      {
+        "internalType": "bool",
+        "name": "isDelegate",
+        "type": "bool"
+      }
+    ],
     "name": "swapETH",
     "outputs": [],
+    "stateMutability": "payable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "tokenIn",
+        "type": "address"
+      },
+      {
+        "internalType": "contract IERC20",
+        "name": "tokenOut",
+        "type": "address"
+      },
+      {
+        "internalType": "address",
+        "name": "aggregator",
+        "type": "address"
+      },
+      {
+        "internalType": "bytes",
+        "name": "swapData",
+        "type": "bytes"
+      },
+      {
+        "internalType": "uint256",
+        "name": "amountIn",
+        "type": "uint256"
+      },
+      {
+        "internalType": "uint256",
+        "name": "minAmountOut",
+        "type": "uint256"
+      },
+      {
+        "internalType": "address",
+        "name": "receiver",
+        "type": "address"
+      },
+      {
+        "internalType": "bool",
+        "name": "isDelegate",
+        "type": "bool"
+      }
+    ],
+    "name": "swapETHDelegate",
+    "outputs": [
+      {
+        "internalType": "uint256",
+        "name": "amountOut",
+        "type": "uint256"
+      }
+    ],
     "stateMutability": "payable",
     "type": "function"
   },

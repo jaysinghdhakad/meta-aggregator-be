@@ -9,8 +9,8 @@ import { getMinAmountOut, fetchPriceFromPortals, calculatePriceImpactPercentage,
 import BigNumber from "bignumber.js";
 export const sortOrder = async (chainID: number, slippage: number, amount: string, tokenIn: string, tokenOut: string, sender: string, receiver: string, skipSimulation: boolean) => {
   const isEth = tokenIn.toLowerCase() === '0xeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee';
-  const swapContract = getSwapContract(chainID, isEth) || ""
-  const fromAddress = getSwapContract(chainID, true) || " "
+  const swapContract = getSwapContract(chainID, true) || " ";
+  const fromAddress = skipSimulation ? sender : getSwapContract(chainID, true) || " ";
 
 
   // Get quotes and run simulations for all protocols
@@ -23,7 +23,7 @@ export const sortOrder = async (chainID: number, slippage: number, amount: strin
         const data = portalfi.tx.data
 
         const minAmountOut = portalfi.context.minOutputAmount;
-        const swapData = generateSwapData(tokenIn, tokenOut, to, data, amount, minAmountOut, receiver, false, chainID, isEth) || ""
+        const swapData = generateSwapData(tokenIn, tokenOut, to, data, amount, minAmountOut, receiver, false, chainID, isEth, skipSimulation) || ""
 
         let simulationPassed;
         if (!skipSimulation) {
@@ -43,7 +43,7 @@ export const sortOrder = async (chainID: number, slippage: number, amount: strin
         const to = enso.tx.to
         const data = enso.tx.data
         const minAmountOut = getMinAmountOut(enso.amountOut, slippage);
-        const swapData = generateSwapData(tokenIn, tokenOut, to, data, amount, minAmountOut, receiver, true, chainID, isEth) || ""
+        const swapData = generateSwapData(tokenIn, tokenOut, to, data, amount, minAmountOut, receiver, true, chainID, isEth, skipSimulation) || ""
 
 
         let simulationPassed;
@@ -64,7 +64,7 @@ export const sortOrder = async (chainID: number, slippage: number, amount: strin
         const to = barter.to
         const data = barter.data
         const minAmountOut = getMinAmountOut(barter.route.outputAmount, slippage);
-        const swapData = generateSwapData(tokenIn, tokenOut, to, data, amount, minAmountOut, receiver, false, chainID, isEth) || ""
+        const swapData = generateSwapData(tokenIn, tokenOut, to, data, amount, minAmountOut, receiver, false, chainID, isEth, skipSimulation) || ""
 
         let simulationPassed;
         if (!skipSimulation) {
@@ -84,7 +84,7 @@ export const sortOrder = async (chainID: number, slippage: number, amount: strin
         const to = zerox.transaction.to;
         const data = zerox.transaction.data;
         const minAmountOut = zerox.minBuyAmount;
-        const swapData = generateSwapData(tokenIn, tokenOut, to, data, amount, minAmountOut, receiver, false, chainID, isEth) || "";
+        const swapData = generateSwapData(tokenIn, tokenOut, to, data, amount, minAmountOut, receiver, false, chainID, isEth,skipSimulation) || "";
 
         let simulationPassed;
         if (!skipSimulation) {
@@ -119,7 +119,7 @@ export const sortOrder = async (chainID: number, slippage: number, amount: strin
         const to = wowMax.contract;
         const data = wowMax.data;
         const minAmountOut = getMinAmountOut(wowMax.amountOut[0], slippage);
-        const swapData = generateSwapData(tokenIn, tokenOut, to, data, amount, minAmountOut, receiver, false, chainID, isEth) || "";
+        const swapData = generateSwapData(tokenIn, tokenOut, to, data, amount, minAmountOut, receiver, false, chainID, isEth, skipSimulation) || "";
 
         let simulationPassed;
         if (!skipSimulation) {
@@ -138,7 +138,7 @@ export const sortOrder = async (chainID: number, slippage: number, amount: strin
       const to = kyberswap.routerAddress;
       const data = kyberswap.encodedSwapData;
       const minAmountOut = getMinAmountOut(kyberswap.outputAmount, slippage);
-      const swapData = generateSwapData(tokenIn, tokenOut, to, data, amount, minAmountOut, receiver, false, chainID, isEth) || "";
+      const swapData = generateSwapData(tokenIn, tokenOut, to, data, amount, minAmountOut, receiver, false, chainID, isEth, skipSimulation) || "";
 
       let simulationPassed;
       if (!skipSimulation) {
