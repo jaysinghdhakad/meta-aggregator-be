@@ -1,96 +1,148 @@
 import express from "express";
-import { getPortalfiQuote } from "./protalfi";
-import { getEnsoQuote } from "./enso";
-import { getBarterQuote } from "./barter";
-import BigNumber from "bignumber.js";
+import { sortOrder } from "./helpers/sortOrder";
+import { getAmountOut } from "./helpers/sortAmount";
+import { getSwapData } from "./helpers/fetchSwapData";
 import cors from "cors";
-
-
+import swaggerUi from 'swagger-ui-express';
+import swaggerDocument from './swagger.json';
+import { baseChainID } from "./utils/config";
+import { ethers } from "ethers";
+import { PROTOCOLS } from "./utils/protocol";
+import BigNumber from "bignumber.js";
 
 
 const app = express();
 app.use(cors());
 
-const port = 4000;
+const port = process.env.PORT || 3000;
 
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
-app.get('/', (req, res) => {
-  res.send('Welcome to my server!');
-});
 
-app.post('/best-quote', async (req, res) => {
-  const { slippage, amount, tokenIn, tokenOut, sender } = req.body;
-  // sort the quotes by amount out and return the quote with the max amount out
-  const swapData = await sortOrder(slippage, amount, tokenIn, tokenOut, sender)
+// Custom CSS to increase summary font size
+const customCss = `
+  .swagger-ui .opblock-summary-description {
+    font-size: 16px !important;
+  }
+`;
+
+app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerDocument, {
+  customCss: customCss,
+}));
+
+const checkRequiredFields = (requiredFields: string[]) => {
+  return (req: express.Request, res: express.Response, next: express.NextFunction) => {
+    const missingFields = requiredFields.filter(field => !(field in req.body));
+
+    if (missingFields.length > 0) {
+      return res.status(400).json({
+        error: `Missing required field(s): ${missingFields.join(', ')}`
+      });
+    }
+
+    next();
+  };
+};
+
+
+const validateSwapParams = (
+  req: express.Request,
+  res: express.Response,
+  next: express.NextFunction
+) => {
+  const { tokenIn, tokenOut, amount, receiver, sender, chainId, slippage, protocol, amountOut, skipSimulation } = req.body;
+
+  const errors: string[] = [];
+  // Validate token addresses
+  if (tokenIn && !ethers.isAddress(tokenIn)) {
+    errors.push("Invalid tokenIn address");
+  }
+  if (tokenOut && !ethers.isAddress(tokenOut)) {
+    errors.push("Invalid tokenOut address");
+  }
+
+  // Validate amount
+  if (amount && (isNaN(parseFloat(amount)) || parseFloat(amount) <= 0)) {
+    errors.push("Invalid amount: must be a positive number");
+  }
+
+  // Validate receiver and sender addresses
+  if (receiver && !ethers.isAddress(receiver)) {
+    errors.push("Invalid receiver address");
+  }
+  if (sender && !ethers.isAddress(sender)) {
+    errors.push("Invalid sender address");
+  }
+  
+  if (chainId !== baseChainID) {
+    errors.push(`Invalid chain ID. Expected ${baseChainID}`);
+  }
+
+  if (slippage && (isNaN(parseFloat(slippage)) || parseFloat(slippage) < 0)) {
+    errors.push("Invalid slippage: must be a non-negative number");
+  }
+
+  if (protocol && !PROTOCOLS.includes(protocol)) {
+    errors.push(`Invalid protocol: must be one of ${PROTOCOLS.join(', ')}`);
+  }
+
+  if (amountOut && (isNaN(parseFloat(amountOut)) || parseFloat(amountOut) <= 0)) {
+    errors.push("Invalid amountOut: must be a positive number");
+  }
+
+  if (skipSimulation && typeof skipSimulation !== 'boolean') {
+    errors.push("Invalid skipSimulation: must be a boolean value");
+  }
+
+
+  if (errors.length > 0) {
+    return res.status(400).json({ errors });
+  }
+
+  next();
+};
+
+
+const validateRequest = (requiredFields: string[]) => {
+  return [
+    checkRequiredFields(requiredFields),
+    validateSwapParams
+  ];
+};
+
+
+// This is for the best quotes with swap data. This endpoint queries all protocols and returns the best quotes with swap data in descending order of amount out
+app.post('/best-quotes', validateRequest(['slippage', 'amount', 'tokenIn', 'tokenOut', 'sender', 'receiver', 'chainId', 'skipSimulation']), async (req: express.Request, res: express.Response) => {
+  let { slippage, amount, tokenIn, tokenOut, sender, receiver, chainId, skipSimulation } = req.body;
+  // sort the quotes by amount out and return the quotes in descending order of amount out
+  const swapData = await sortOrder(chainId, slippage, amount, tokenIn, tokenOut, sender, receiver, skipSimulation)
+  if (swapData.quotes.length == 0) return res.status(404).send({ message: "No quotes found" });
   res.send(swapData);
 });
 
-export const sortOrder = async (slippage: number, amount: number, tokenIn: string, tokenOut: string, sender: string) => {
-  // get quotes from all protocols
-  const [portalfi, enso, barter] = await Promise.all([
-    getPortalfiQuote(slippage, amount, tokenIn, tokenOut, sender),
-    getEnsoQuote(slippage, amount, tokenIn, tokenOut, sender), 
-    getBarterQuote(slippage, amount, tokenIn, tokenOut, sender)
-  ])
+//This is for the best amount out. This endpoint queries all protocols and returns the best amount out. Also give the approval address for the best quote.Would not return amount from protalfi if sender is not receiver.
+app.post('/best-amount-out', validateRequest(['amount', 'tokenIn', 'tokenOut', 'sender', 'receiver', 'chainId']), async (req: express.Request, res: express.Response) => {
+  let { amount, tokenIn, tokenOut, sender, receiver, chainId } = req.body;
+  // sort the quotes by amount out and return the quote with the max amount out
 
-  const portalfiAmount = portalfi ? portalfi.context.outputAmount : 0
-  const ensoAmount = enso ? enso.amountOut : 0
-  const barterAmount = barter ? barter.route.outputAmount : 0
-  // find the max amount out of all quotes
-  const maxAmount = findMax(portalfiAmount, ensoAmount, barterAmount)
+  const response = await getAmountOut(chainId, amount, tokenIn, tokenOut, sender, receiver);
 
+  if (response == null) return res.status(404).send({ message: "No quotes found" });
+  res.send(response);
+});
 
-  console.log("maxAmount", maxAmount)
-  console.log("portalfiAmount", portalfiAmount)
-  console.log("ensoAmount", ensoAmount)
-  console.log("barterAmount", barterAmount)
-
-
-  // return the quote with the max amount out
-  if (maxAmount === portalfiAmount) {
-    return {
-      protocol: "portalfi",
-      to: portalfi.tx.to,
-      data: portalfi.tx.data,
-      value: portalfi.tx.value,
-      amountOut: portalfiAmount,
-      approvalAddress: portalfi.tx.to,
-      minAmountOut: portalfi.context.minOutputAmount
-    }
-  } else if (maxAmount === ensoAmount) {
-    const minAmountOut = Math.floor(ensoAmount - (ensoAmount * (slippage / 100)))
-    return {
-      protocol: "enso",
-      to: enso.tx.to,
-      data: enso.tx.data,
-      value: enso.tx.value,
-      amountOut: ensoAmount,
-      approvalAddress: "0x27Dd78498B909cD0B93f0E312d1A1bB12c89921d",
-      minAmountOut: minAmountOut
-    }
-  } else {
-    const minAmountOut = Math.floor(barterAmount - (barterAmount * (slippage / 100)))
-    return {
-      protocol: "barter",
-      to: barter.to,
-      data: barter.data,
-      value: barter.value,
-      amountOut: barterAmount,
-      approvalAddress: barter.to,
-      minAmountOut: minAmountOut
-    }
-  }
-
-}
-
-function findMax(a: any, b: any, c: any) {
-  const maxAB = BigNumber.max(a, b);
-  const maxABC = BigNumber.max(maxAB, c);
-  return maxABC.toFixed(0);
-}
+// This end point is for the swap data. This endpoint queries the protocol sent in by the user and returns the swap data. Also give the approval address for the best quote.Would not return amount from protalfi if sender is not receiver.
+app.post('/swap-data', validateRequest(['slippage', 'amount', 'tokenIn', 'tokenOut', 'sender', 'amountOut', 'protocol', 'receiver', 'chainId']), async (req: express.Request, res: express.Response) => {
+  let { slippage, amount, tokenIn, tokenOut, sender, amountOut, protocol, receiver, chainId } = req.body;
+  // get the swap data from the protocol sent in by the user
+  const swapData = await getSwapData(chainId, protocol, slippage, amount, tokenIn, tokenOut, sender, receiver, amountOut);
+  if (swapData == null) return res.status(404).send({ message: "No swap data found" });
+  res.send(swapData);
+})
 
 app.listen(port, () => {
   console.log(`Server is running on port ${port}`);
+  console.log(`Swagger documentation available at http://localhost:${port}/api-docs`);
 });
+

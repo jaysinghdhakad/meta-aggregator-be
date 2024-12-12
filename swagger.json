@@ -1,0 +1,426 @@
+{
+    "openapi": "3.0.0",
+    "info": {
+        "title": "Swap API",
+        "version": "1.0.0",
+        "description": "API for getting best quotes and swap data"
+    },
+    "servers": [
+        {
+            "url": "https://metasolvertest.velvetdao.xyz"
+        }
+    ],
+    "paths": {
+        "/best-quotes": {
+            "post": {
+                "summary": "This is for the best quotes with swap data. This endpoint queries all protocols and returns the best quotes with swap data in descending order of amount out. Also gives the approval address for tokens swap",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "type": "object",
+                                "required": [
+                                    "slippage",
+                                    "amount",
+                                    "tokenIn",
+                                    "tokenOut",
+                                    "sender",
+                                    "receiver",
+                                    "chainId"
+                                ],
+                                "properties": {
+                                    "slippage": {
+                                        "type": "number"
+                                    },
+                                    "amount": {
+                                        "type": "string"
+                                    },
+                                    "tokenIn": {
+                                        "type": "string"
+                                    },
+                                    "tokenOut": {
+                                        "type": "string"
+                                    },
+                                    "sender": {
+                                        "type": "string"
+                                    },
+                                    "receiver": {
+                                        "type": "string"
+                                    },
+                                    "chainId": {
+                                        "type": "number"
+                                    },
+                                    "skipSimulation": {
+                                        "type": "boolean"
+                                    }
+                                }
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Successful response with best quote",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "quotes": {
+                                            "type": "array",
+                                            "items": {
+                                                "type": "object",
+                                                "properties": {
+                                                    "protocol": {
+                                                        "type": "string"
+                                                    },
+                                                    "amountOut": {
+                                                        "type": "string"
+                                                    },
+                                                    "to": {
+                                                        "type": "string"
+                                                    },
+                                                    "data": {
+                                                        "type": "string"
+                                                    },
+                                                    "value": {
+                                                        "type": "string"
+                                                    },
+                                                    "minAmountOut": {
+                                                        "type": "string"
+                                                    },
+                                                    "gasEstimate": {
+                                                        "type": "number"
+                                                    },
+                                                    "priceImpactPercentage": {
+                                                        "type": "number"
+                                                    }
+                                                }
+                                            }
+                                        },
+                                        "approvalAddress": {
+                                            "type": "string"
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request. This error occurs when the request is malformed or missing required parameters. It may indicate invalid input data, missing required fields, or an attempt to use an unsupported chain ID.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "error": {
+                                            "type": "string",
+                                            "enum": [
+                                                "Missing required field: slippage",
+                                                "Missing required field: amount",
+                                                "Missing required field: tokenIn",
+                                                "Missing required field: tokenOut",
+                                                "Missing required field: sender",
+                                                "Missing required field: receiver",
+                                                "Missing required field: chainId",
+                                                "Invalid chain ID",
+                                                "Invalid tokenIn address",
+                                                "Invalid tokenOut address",
+                                                "Invalid amount: must be a positive number",
+                                                "Invalid receiver address",
+                                                "Invalid sender address",
+                                                "Invalid slippage: must be a non-negative number",
+                                                "Invalid skipSimulation: must be a boolean value"
+                                            ]
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found. This error occurs when the requested resource cannot be found. It may indicate an invalid route, unavailable quote, or non-existent swap data.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "enum": [
+                                                "Route not found"
+                                            ]
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/best-amount-out": {
+            "post": {
+                "summary": "This is for the best amount out. This endpoint queries all protocols and returns the best amount out. Also give the approval address for the best quote.Would not return amount from protalfi if sender is not receiver.",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "type": "object",
+                                "required": [
+                                    "amount",
+                                    "tokenIn",
+                                    "tokenOut",
+                                    "sender",
+                                    "receiver",
+                                    "chainId"
+                                ],
+                                "properties": {
+                                    "amount": {
+                                        "type": "string"
+                                    },
+                                    "tokenIn": {
+                                        "type": "string"
+                                    },
+                                    "tokenOut": {
+                                        "type": "string"
+                                    },
+                                    "sender": {
+                                        "type": "string"
+                                    },
+                                    "receiver": {
+                                        "type": "string"
+                                    },
+                                    "chainId": {
+                                        "type": "number"
+                                    }
+                                }
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Successful response. The operation completed as expected.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "amountOut": {
+                                            "type": "string"
+                                        },
+                                        "protocol": {
+                                            "type": "string"
+                                        },
+                                        "approvalAddress": {
+                                            "type": "string"
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request. This error occurs when the request is malformed or missing required parameters. It may indicate invalid input data, missing required fields, or an attempt to use an unsupported chain ID.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "error": {
+                                            "type": "string",
+                                            "enum": [
+                                                "Missing required field: amount",
+                                                "Missing required field: tokenIn",
+                                                "Missing required field: tokenOut",
+                                                "Missing required field: sender",
+                                                "Missing required field: receiver",
+                                                "Missing required field: chainId",
+                                                "Invalid chain ID",
+                                                "Invalid tokenIn address",
+                                                "Invalid tokenOut address",
+                                                "Invalid amount: must be a positive number",
+                                                "Invalid receiver address",
+                                                "Invalid sender address"
+                                            ]
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found. This error occurs when the requested resource cannot be found. It may indicate an invalid route, unavailable quote, or non-existent swap data.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "enum": [
+                                                "Route not found"
+                                            ]
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/swap-data": {
+            "post": {
+                "summary": "This end point is for the swap data. This endpoint queries the protocol sent in by the user and returns the swap data. Also give the approval address for the best quote.Would not return amount from protalfi if sender is not receiver.",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "type": "object",
+                                "required": [
+                                    "slippage",
+                                    "amount",
+                                    "tokenIn",
+                                    "tokenOut",
+                                    "sender",
+                                    "amountOut",
+                                    "protocol",
+                                    "receiver",
+                                    "chainId"
+                                ],
+                                "properties": {
+                                    "slippage": {
+                                        "type": "number"
+                                    },
+                                    "amount": {
+                                        "type": "string"
+                                    },
+                                    "tokenIn": {
+                                        "type": "string"
+                                    },
+                                    "tokenOut": {
+                                        "type": "string"
+                                    },
+                                    "sender": {
+                                        "type": "string"
+                                    },
+                                    "amountOut": {
+                                        "type": "string"
+                                    },
+                                    "protocol": {
+                                        "type": "string"
+                                    },
+                                    "receiver": {
+                                        "type": "string"
+                                    },
+                                    "chainId": {
+                                        "type": "number"
+                                    }
+                                }
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Successful response with swap data",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "protocol": {
+                                            "type": "string"
+                                        },
+                                        "amountOut": {
+                                            "type": "string"
+                                        },
+                                        "to": {
+                                            "type": "string"
+                                        },
+                                        "data": {
+                                            "type": "string"
+                                        },
+                                        "value": {
+                                            "type": "string"
+                                        },
+                                        "minAmountOut": {
+                                            "type": "string"
+                                        },
+                                        "gasEstimate": {
+                                            "type": "number"
+                                        },
+                                        "approvalAddress": {
+                                            "type": "string"
+                                        },
+                                        "priceImpactPercentage": {
+                                            "type": "number"
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request. This error occurs when the request is malformed or missing required parameters. It may indicate invalid input data, missing required fields, or an attempt to use an unsupported chain ID.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "error": {
+                                            "type": "string",
+                                            "enum": [
+                                                "Missing required field: amount",
+                                                "Missing required field: tokenIn",
+                                                "Missing required field: tokenOut",
+                                                "Missing required field: sender",
+                                                "Missing required field: receiver",
+                                                "Missing required field: chainId",
+                                                "Missing required field: amountOut",
+                                                "Missing required field: protocol",
+                                                "Invalid chain ID",
+                                                "Invalid tokenIn address",
+                                                "Invalid tokenOut address",
+                                                "Invalid amount: must be a positive number",
+                                                "Invalid receiver address",
+                                                "Invalid sender address",
+                                                "Invalid slippage: must be a non-negative number",
+                                                "Invalid amountOut: must be a positive number",
+                                                "Invalid protocol: must be one of enso, portalfi, barter"
+                                            ]
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found. This error occurs when the requested resource cannot be found. It may indicate an invalid route, unavailable quote, or non-existent swap data.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "enum": [
+                                                "Route not found",
+                                                "No quotes available for the given pair"
+                                            ]
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
